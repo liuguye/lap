@@ -23,6 +23,27 @@ struct LapLibRawImage {
     flip: c_int,
 }
 
+#[repr(C)]
+struct LapLibRawMeta {
+    make: [c_char; 128],
+    model: [c_char; 128],
+    software: [c_char; 128],
+    artist: [c_char; 64],
+    desc: [c_char; 512],
+    timestamp: i64,
+    iso_speed: f32,
+    shutter: f32,
+    aperture: f32,
+    focal_len: f32,
+    flash_used: f32,
+    lens_make: [c_char; 128],
+    lens_model: [c_char; 128],
+    min_focal: f32,
+    max_focal: f32,
+    max_ap_min_focal: f32,
+    max_ap_max_focal: f32,
+}
+
 #[link(name = "lap_libraw_shim", kind = "static")]
 unsafe extern "C" {
     fn lap_libraw_open_buffer(data: *const u8, len: usize, err: *mut c_int) -> *mut c_void;
@@ -34,6 +55,7 @@ unsafe extern "C" {
         height: *mut u32,
         flip: *mut c_int,
     ) -> c_int;
+    fn lap_libraw_get_meta(raw: *mut c_void, out: *mut LapLibRawMeta) -> c_int;
     fn lap_libraw_get_thumbnail_count(raw: *mut c_void) -> c_int;
     fn lap_libraw_extract_thumbnail(
         raw: *mut c_void,
@@ -238,6 +260,61 @@ impl RawHandle {
         Ok((width, height, flip))
     }
 
+    fn meta(&self) -> Result<RawMeta, String> {
+        let mut out = LapLibRawMeta {
+            make: [0; 128],
+            model: [0; 128],
+            software: [0; 128],
+            artist: [0; 64],
+            desc: [0; 512],
+            timestamp: 0,
+            iso_speed: 0.0,
+            shutter: 0.0,
+            aperture: 0.0,
+            focal_len: 0.0,
+            flash_used: 0.0,
+            lens_make: [0; 128],
+            lens_model: [0; 128],
+            min_focal: 0.0,
+            max_focal: 0.0,
+            max_ap_min_focal: 0.0,
+            max_ap_max_focal: 0.0,
+        };
+        let ret = unsafe { lap_libraw_get_meta(self.raw, &mut out) };
+        if ret != 0 {
+            return Err(libraw_error(ret, "Failed to extract RAW metadata"));
+        }
+
+        Ok(RawMeta {
+            make: c_char_array_to_string(&out.make),
+            model: c_char_array_to_string(&out.model),
+            software: c_char_array_to_string(&out.software),
+            artist: c_char_array_to_string(&out.artist),
+            description: c_char_array_to_string(&out.desc),
+            timestamp: (out.timestamp > 0).then_some(out.timestamp),
+            iso_speed: (out.iso_speed > 0.0).then(|| format_float(out.iso_speed)),
+            shutter: (out.shutter > 0.0).then(|| format_shutter_speed(out.shutter)),
+            aperture: (out.aperture > 0.0).then(|| format!("f/{}", format_float(out.aperture))),
+            focal_len: (out.focal_len > 0.0).then(|| format!("{}mm", format_float(out.focal_len))),
+            flash_used: (out.flash_used != 0.0).then(|| {
+                if out.flash_used > 0.0 {
+                    "Fired".to_string()
+                } else {
+                    "Not fired".to_string()
+                }
+            }),
+            lens_make: c_char_array_to_string(&out.lens_make),
+            lens_model: c_char_array_to_string(&out.lens_model).or_else(|| {
+                format_lens_model_from_numbers(
+                    out.min_focal,
+                    out.max_focal,
+                    out.max_ap_min_focal,
+                    out.max_ap_max_focal,
+                )
+            }),
+        })
+    }
+
     fn thumbnail_count(&self) -> i32 {
         unsafe { lap_libraw_get_thumbnail_count(self.raw) }
     }
@@ -336,6 +413,86 @@ impl RawHandle {
     }
 }
 
+/// Metadata extracted from a RAW file via LibRaw.
+pub struct RawMeta {
+    pub make: Option<String>,
+    pub model: Option<String>,
+    pub software: Option<String>,
+    pub artist: Option<String>,
+    pub description: Option<String>,
+    pub timestamp: Option<i64>,
+    pub iso_speed: Option<String>,
+    pub shutter: Option<String>,
+    pub aperture: Option<String>,
+    pub focal_len: Option<String>,
+    pub flash_used: Option<String>,
+    pub lens_make: Option<String>,
+    pub lens_model: Option<String>,
+}
+
+fn c_char_array_to_string(bytes: &[c_char]) -> Option<String> {
+    let ptr = bytes.as_ptr();
+    if ptr.is_null() || bytes.first().copied().unwrap_or_default() == 0 {
+        return None;
+    }
+
+    unsafe { CStr::from_ptr(ptr) }
+        .to_str()
+        .ok()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+}
+
+fn format_float(value: f32) -> String {
+    if value.fract().abs() < 0.05 {
+        format!("{:.0}", value)
+    } else {
+        format!("{:.1}", value)
+    }
+}
+
+fn format_shutter_speed(shutter: f32) -> String {
+    if shutter >= 1.0 {
+        format!("{}s", format_float(shutter))
+    } else {
+        let denom = (1.0 / shutter).round();
+        format!("1/{}s", denom)
+    }
+}
+
+fn format_lens_model_from_numbers(
+    min_focal: f32,
+    max_focal: f32,
+    max_ap_min_focal: f32,
+    max_ap_max_focal: f32,
+) -> Option<String> {
+    if min_focal <= 0.0 || max_focal <= 0.0 || max_ap_min_focal <= 0.0 || max_ap_max_focal <= 0.0
+    {
+        return None;
+    }
+
+    let focal = if (min_focal - max_focal).abs() < 0.05 {
+        format!("{}mm", format_float(min_focal))
+    } else {
+        format!(
+            "{}-{}mm",
+            format_float(min_focal),
+            format_float(max_focal)
+        )
+    };
+    let aperture = if (max_ap_min_focal - max_ap_max_focal).abs() < 0.05 {
+        format!("f/{}", format_float(max_ap_min_focal))
+    } else {
+        format!(
+            "f/{}-{}",
+            format_float(max_ap_min_focal),
+            format_float(max_ap_max_focal)
+        )
+    };
+    Some(format!("{} {}", focal, aperture))
+}
+
 fn render_processed_preview(file_path: &str, max_edge: u32) -> Result<Vec<u8>, String> {
     let mut raw = RawHandle::open(file_path)?;
     let rendered = raw.render_preview()?;
@@ -354,6 +511,10 @@ pub fn get_raw_dimensions(file_path: &str) -> Result<(u32, u32), String> {
 
 pub fn get_raw_dimensions_with_flip(file_path: &str) -> Result<(u32, u32, i32), String> {
     RawHandle::open(file_path)?.dimensions_with_flip()
+}
+
+pub fn get_raw_meta(file_path: &str) -> Result<RawMeta, String> {
+    RawHandle::open(file_path)?.meta()
 }
 
 /// Read the EXIF Orientation tag from in-memory JPEG bytes.

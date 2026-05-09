@@ -16,6 +16,33 @@ struct LapLibRawImage {
   int flip;
 };
 
+struct LapLibRawMeta {
+  // Camera info (imgdata.idata)
+  char make[128];
+  char model[128];
+  char software[128];
+
+  // Capture settings (imgdata.other)
+  char artist[64];
+  char desc[512];
+  long long timestamp;  // time_t
+  float iso_speed;
+  float shutter;
+  float aperture;
+  float focal_len;
+
+  // Flash (imgdata.color)
+  float flash_used;
+
+  // Lens info (imgdata.lens)
+  char lens_make[128];
+  char lens_model[128];
+  float min_focal;
+  float max_focal;
+  float max_ap_min_focal;
+  float max_ap_max_focal;
+};
+
 libraw_data_t *lap_libraw_open_buffer(const unsigned char *data, size_t len,
                                       int *err) {
   libraw_data_t *raw = libraw_init(0);
@@ -77,6 +104,63 @@ int lap_libraw_get_dimensions(libraw_data_t *raw, unsigned int *width,
   if (flip) {
     *flip = raw->sizes.flip;
   }
+
+  return LIBRAW_SUCCESS;
+}
+
+int lap_libraw_get_meta(libraw_data_t *raw, LapLibRawMeta *out) {
+  if (!raw || !out) {
+    return LIBRAW_UNSPECIFIED_ERROR;
+  }
+
+  int ret = libraw_unpack(raw);
+  if (ret != LIBRAW_SUCCESS) {
+    return ret;
+  }
+
+  std::memset(out, 0, sizeof(*out));
+
+  // Camera info
+  if (raw->idata.make[0]) {
+    std::strncpy(out->make, raw->idata.make, sizeof(out->make) - 1);
+  }
+  if (raw->idata.model[0]) {
+    std::strncpy(out->model, raw->idata.model, sizeof(out->model) - 1);
+  }
+  if (raw->idata.software[0]) {
+    std::strncpy(out->software, raw->idata.software, sizeof(out->software) - 1);
+  }
+
+  // Capture settings
+  if (raw->other.artist[0]) {
+    std::strncpy(out->artist, raw->other.artist, sizeof(out->artist) - 1);
+  }
+  if (raw->other.desc[0]) {
+    std::strncpy(out->desc, raw->other.desc, sizeof(out->desc) - 1);
+  }
+  out->timestamp = raw->other.timestamp;
+  out->iso_speed = raw->other.iso_speed;
+  out->shutter = raw->other.shutter;
+  out->aperture = raw->other.aperture;
+  out->focal_len = raw->other.focal_len;
+
+  // Flash
+  out->flash_used = raw->color.flash_used;
+
+  // Lens info
+  const auto &lens = raw->lens;
+  if (lens.LensMake[0]) {
+    std::strncpy(out->lens_make, lens.LensMake, sizeof(out->lens_make) - 1);
+  }
+  if (lens.Lens[0]) {
+    std::strncpy(out->lens_model, lens.Lens, sizeof(out->lens_model) - 1);
+  } else if (lens.makernotes.Lens[0]) {
+    std::strncpy(out->lens_model, lens.makernotes.Lens, sizeof(out->lens_model) - 1);
+  }
+  out->min_focal = lens.makernotes.MinFocal;
+  out->max_focal = lens.makernotes.MaxFocal;
+  out->max_ap_min_focal = lens.makernotes.MaxAp4MinFocal;
+  out->max_ap_max_focal = lens.makernotes.MaxAp4MaxFocal;
 
   return LIBRAW_SUCCESS;
 }

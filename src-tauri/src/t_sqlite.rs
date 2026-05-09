@@ -6,15 +6,16 @@
  */
 use crate::t_ai;
 use crate::t_config;
-use crate::t_storage;
 use crate::t_image;
 use crate::t_lens;
+use crate::t_libraw;
+use crate::t_storage;
 use crate::t_utils;
 use crate::t_video;
-use base64::{Engine, engine::general_purpose};
+use base64::{engine::general_purpose, Engine};
 use exif::{In, Tag, Value};
 use image::{GenericImageView, ImageFormat};
-use rusqlite::{Connection, OptionalExtension, Result, ToSql, params, params_from_iter};
+use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Result, ToSql};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -843,8 +844,64 @@ impl AFile {
                 }
             }
 
+            // For RAW files, LibRaw is the primary metadata source.
+            // It reads the file directly and does not rely on the embedded JPEG
+            // that the permissive EXIF reader scans, so it is robust against
+            // RAW files whose EXIF data is stored outside the preview image.
+            if file_type == 3 {
+                if let Ok(meta) = t_libraw::get_raw_meta(file_path) {
+                    if e_make.is_none() {
+                        e_make = meta.make;
+                    }
+                    if e_model.is_none() {
+                        e_model = meta.model;
+                    }
+                    if e_software.is_none() {
+                        e_software = meta.software;
+                    }
+                    if e_artist.is_none() {
+                        e_artist = meta.artist;
+                    }
+                    if e_description.is_none() {
+                        e_description = meta.description;
+                    }
+                    if e_iso_speed.is_none() {
+                        e_iso_speed = meta.iso_speed;
+                    }
+                    if e_exposure_time.is_none() {
+                        e_exposure_time = meta.shutter;
+                    }
+                    if e_f_number.is_none() {
+                        e_f_number = meta.aperture;
+                    }
+                    if e_focal_length.is_none() {
+                        e_focal_length = meta.focal_len;
+                    }
+                    if e_flash.is_none() {
+                        e_flash = meta.flash_used;
+                    }
+                    if e_lens_make.is_none() {
+                        e_lens_make = meta.lens_make;
+                    }
+                    if e_lens_model.is_none() {
+                        e_lens_model = meta.lens_model;
+                    }
+                    if taken_date == file_info.modified {
+                        if let Some(ts) = meta.timestamp {
+                            taken_date = Some(ts);
+                        }
+                    }
+                }
+            }
+
             // Binary String Fallback if metadata is still missing (Industry standard for tough files)
-            if e_make.is_none() || e_model.is_none() || e_date_time.is_none() {
+            if e_make.is_none()
+                || e_model.is_none()
+                || e_date_time.is_none()
+                || e_software.is_none()
+                || e_lens_make.is_none()
+                || e_lens_model.is_none()
+            {
                 if let Ok(mut f) = std::fs::File::open(file_path) {
                     let mut buf = vec![0u8; 128 * 1024];
                     use std::io::Read;
@@ -867,7 +924,9 @@ impl AFile {
                     if e_lens_model.is_none() {
                         e_lens_model = Self::scrape_ascii_from_tag(data, 0xa434);
                     }
-
+                    if e_lens_make.is_none() {
+                        e_lens_make = Self::scrape_ascii_from_tag(data, 0xa433);
+                    }
                     // Extra Orientation fallback for Sony MakerNotes (Tag 0x2000)
                     if e_orientation.is_none() || e_orientation == Some(1) {
                         if let Some(so) = Self::scrape_u16_from_tag(data, 0x2000) {
@@ -876,6 +935,12 @@ impl AFile {
                             }
                         }
                     }
+                }
+            }
+
+            if e_lens_make.is_none() {
+                if let Some(model) = e_lens_model.as_deref() {
+                    e_lens_make = t_lens::infer_lens_make(model).map(|s| s.to_string());
                 }
             }
 
@@ -915,7 +980,9 @@ impl AFile {
             folder_id,
 
             name: file_info.file_name.clone(),
-            name_pinyin: Some(t_utils::natural_sort_key(&file_info.file_name.to_lowercase())), // natural sort key (case-insensitive, pinyin + zero-padded numbers)
+            name_pinyin: Some(t_utils::natural_sort_key(
+                &file_info.file_name.to_lowercase(),
+            )), // natural sort key (case-insensitive, pinyin + zero-padded numbers)
             size: file_info.file_size,
             file_type: Some(file_type),
             format_label,
@@ -2563,7 +2630,11 @@ impl AThumb {
                                 Err(_) => (None, 1),   // error
                             }
                             #[cfg(all(not(target_os = "macos"), lap_has_libheif))]
-                            match crate::t_heif::get_heif_thumbnail(file_path, orientation, thumbnail_size) {
+                            match crate::t_heif::get_heif_thumbnail(
+                                file_path,
+                                orientation,
+                                thumbnail_size,
+                            ) {
                                 Ok(Some(data)) => (Some(data), 0),
                                 Ok(None) => (None, 1), // empty thumb
                                 Err(_) => (None, 1),   // error
@@ -2769,7 +2840,10 @@ impl AThumb {
 
         let mut thumbs = HashMap::with_capacity(file_ids.len());
         for row in rows {
-            let thumb = Self::hydrate_output_bytes_for_library(row.map_err(|e| e.to_string())?, library_id)?;
+            let thumb = Self::hydrate_output_bytes_for_library(
+                row.map_err(|e| e.to_string())?,
+                library_id,
+            )?;
             thumbs.insert(thumb.file_id, thumb);
         }
         Ok(thumbs)
