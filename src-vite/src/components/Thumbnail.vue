@@ -14,9 +14,13 @@
     <div v-if="file.thumbnail" 
       ref="containerRef"
       class="rounded-box relative flex items-center justify-center overflow-hidden"
-      :style="layoutStyle">
+      :style="layoutStyle"
+      @pointerenter="startVideoPreview"
+      @pointerleave="stopVideoPreview"
+    >
       <!-- image -->
-      <img :src="file.thumbnail"
+      <img
+        :src="file.thumbnail"
         :class="{
           'group-hover:scale-115': config.settings.grid.style === 1 || config.settings.grid.style === 2,
           'scale-115': (config.settings.grid.style === 1 || config.settings.grid.style === 2) && isSelected,
@@ -28,6 +32,28 @@
         :style="imgStyle"
         loading="lazy"
       />
+      <video
+        v-if="showVideoPreview"
+        ref="previewVideoRef"
+        class="pointer-events-none absolute inset-0 transition-opacity duration-100 scale-115"
+        :class="{
+          'object-contain': config.settings.grid.style !== 2 && config.settings.grid.scaling === 0,
+          'object-cover': config.settings.grid.style === 2 || config.settings.grid.scaling === 1,
+          'object-fill': config.settings.grid.style !== 2 && config.settings.grid.scaling === 2,
+          'opacity-100': isVideoPreviewReady,
+          'opacity-0': !isVideoPreviewReady,
+        }"
+        :style="imgStyle"
+        :poster="file.thumbnail"
+        muted
+        autoplay
+        loop
+        playsinline
+        preload="metadata"
+        @canplay="isVideoPreviewReady = true"
+        @playing="isVideoPreviewReady = true"
+        @error="stopVideoPreview"
+      ></video>
 
       <!-- status badges -->
       <div
@@ -127,11 +153,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, toRef, onBeforeUnmount, type CSSProperties, type Component } from 'vue';
+import { computed, nextTick, ref, watch, toRef, onBeforeUnmount, type CSSProperties, type Component } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useUIStore } from '@/stores/uiStore';
 import { config } from '@/common/config';
-import { isMac, shortenFilename, formatFileSize, formatDimensionText, formatDuration, formatTimestamp, formatCaptureSettings, formatCameraInfo } from '@/common/utils';
+import { isMac, shortenFilename, formatFileSize, formatDimensionText, formatDuration, formatTimestamp, formatCaptureSettings, formatCameraInfo, getAssetSrc } from '@/common/utils';
 import ContextMenu from '@/components/ContextMenu.vue';
 import { useFileMenuItems } from '@/common/fileMenu';
 
@@ -176,9 +202,14 @@ let transitionTimeout: NodeJS.Timeout | null = null;
 
 const containerRef = ref<HTMLElement | null>(null);
 const contextMenuRef = ref<InstanceType<typeof ContextMenu> | null>(null);
+const previewVideoRef = ref<HTMLVideoElement | null>(null);
 const containerWidth = ref(0);
 const containerHeight = ref(0);
 let resizeObserver: ResizeObserver | null = null;
+let previewTimer: ReturnType<typeof setTimeout> | null = null;
+const showVideoPreview = ref(false);
+const isVideoPreviewReady = ref(false);
+const isVideoFile = computed(() => props.file?.file_type === 2);
 
 // Robust ResizeObserver setup using watch to handle v-if
 watch(containerRef, (el) => {
@@ -201,6 +232,7 @@ onBeforeUnmount(() => {
   if (resizeObserver) {
     resizeObserver.disconnect();
   }
+  stopVideoPreview();
 });
 
 watch(() => config.settings.grid.style, () => {
@@ -222,6 +254,52 @@ watch(() => props.file.rotate, () => {
     isTransitionDisabled.value = false;
   }, 500);
 });
+
+watch(() => props.file.file_path, () => {
+  stopVideoPreview();
+});
+
+function startVideoPreview() {
+  if (!isVideoFile.value || !props.file?.file_path || previewTimer || showVideoPreview.value) return;
+
+  previewTimer = setTimeout(async () => {
+    previewTimer = null;
+    if (!isVideoFile.value || !props.file?.file_path) return;
+
+    isVideoPreviewReady.value = false;
+    showVideoPreview.value = true;
+    await nextTick();
+
+    const video = previewVideoRef.value;
+    if (!video) return;
+
+    video.src = getAssetSrc(props.file.file_path);
+    video.muted = true;
+
+    try {
+      await video.play();
+    } catch {
+      stopVideoPreview();
+    }
+  }, 400);
+}
+
+function stopVideoPreview() {
+  if (previewTimer) {
+    clearTimeout(previewTimer);
+    previewTimer = null;
+  }
+
+  const video = previewVideoRef.value;
+  if (video) {
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+  }
+
+  isVideoPreviewReady.value = false;
+  showVideoPreview.value = false;
+}
 
 function handleContextMenu(event: MouseEvent) {
   if (props.selectMode) return;
