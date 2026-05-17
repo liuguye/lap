@@ -249,11 +249,6 @@ fn build_libraw() {
 
     build.compile("raw");
 
-    // Link dependencies
-    if let Some(jpeg) = &jpeg_build {
-        println!("cargo:rustc-link-search=native={}", jpeg.lib_dir.display());
-        println!("cargo:rustc-link-lib=static={}", jpeg.lib_name);
-    }
     if is_windows {
         println!("cargo:rustc-link-lib=ws2_32");
     } else {
@@ -266,7 +261,8 @@ fn build_libraw() {
         }
     }
 
-    // Build the shim
+    // Build the shim (must compile before emitting -ljpeg so the linker
+    // processes libjpeg after liblap_libraw_shim, which references jpeg).
     let mut shim = cc::Build::new();
     shim.cpp(true)
         .include(&libraw_source)
@@ -291,6 +287,13 @@ fn build_libraw() {
     }
 
     shim.compile("lap_libraw_shim");
+
+    // Link jpeg after the shim so that liblap_libraw_shim's jpeg
+    // references resolve against the vendored static libjpeg.
+    if let Some(jpeg) = &jpeg_build {
+        println!("cargo:rustc-link-search=native={}", jpeg.lib_dir.display());
+        println!("cargo:rustc-link-lib=static={}", jpeg.lib_name);
+    }
 
     // macOS pasteboard shim for drag-drop URL extraction
     if target_os == "macos" {
