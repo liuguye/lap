@@ -37,6 +37,16 @@
       "description": "Add an album containing images or videos to get started"
     }
   },
+  "welcome": {
+    "title": "Welcome to Lap",
+    "description": "Your local photos and videos, beautifully organized and instantly searchable.",
+    "add_album_title": "Start by adding an album",
+    "add_album_description": "Select a folder to scan for your photos and videos.",
+    "search_title": "Search by memory",
+    "search_description": "Describe what you're looking for, find similar photos, and search in 50+ languages with an optional model download.",
+    "drag_title": "Drag to import",
+    "drag_description": "Drag photos from Finder, Explorer, or your browser directly into any open album folder."
+  },
   "search": {
     "title": "Image Search",
     "search_images": "Search",
@@ -280,7 +290,7 @@
       "albums": "No albums found. Add a folder with images or videos",
       "files": "No files found",
       "folder_files": "This folder has no files",
-      "folder_files_hint": "Drop files or browser images here to import them.",
+      "folder_files_hint": "Try browsing subfolders, or enable 'Show files from subfolders' in Settings.",
       "folders": "No folders found",
       "favorite_folders": "No favorite folders found",
       "favorite_folders_hint": "Favorite a folder in Albums to see its files, including subfolders",

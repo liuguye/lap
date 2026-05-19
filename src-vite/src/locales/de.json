@@ -37,6 +37,16 @@
       "description": "Fügen Sie ein Album hinzu, um zu beginnen"
     }
   },
+  "welcome": {
+    "title": "Willkommen bei Lap",
+    "description": "Deine lokalen Fotos und Videos, schön organisiert und sofort durchsuchbar.",
+    "add_album_title": "Beginne mit dem Hinzufügen eines Albums",
+    "add_album_description": "Wähle einen Ordner zum Scannen deiner Fotos und Videos.",
+    "search_title": "Suche nach Erinnerung",
+    "search_description": "Beschreibe, wonach du suchst, finde ähnliche Fotos und suche in über 50 Sprachen mit einem optionalen Modell-Download.",
+    "drag_title": "Zum Importieren ziehen",
+    "drag_description": "Ziehe Fotos aus dem Finder, Explorer oder Browser direkt in einen geöffneten Album-Ordner."
+  },
   "search": {
     "title": "Bildsuche",
     "search_images": "Suche",
@@ -280,7 +290,7 @@
       "albums": "Keine Alben gefunden. Fügen Sie einen Ordner mit Bildern oder Videos hinzu",
       "files": "Keine Dateien gefunden",
       "folder_files": "Dieser Ordner enthält keine Dateien",
-      "folder_files_hint": "Legen Sie Dateien oder Bilder aus dem Browser hier ab, um sie zu importieren.",
+      "folder_files_hint": "Durchsuchen Sie Unterordner oder aktivieren Sie 'Dateien aus Unterordnern anzeigen' in den Einstellungen.",
       "folders": "Keine Ordner gefunden",
       "favorite_folders": "Keine Favoritenordner gefunden",
       "favorite_folders_hint": "Favorisieren Sie einen Ordner in Alben, um hier seine Dateien und Unterordner zu sehen",

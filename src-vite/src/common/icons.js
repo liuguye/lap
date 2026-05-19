@@ -25,6 +25,7 @@ export { default as IconOrder } from '@/assets/icons/order.svg';
 export { default as IconCopy } from '@/assets/icons/copy.svg';
 export { default as IconMoveTo } from '@/assets/icons/move-to.svg';
 export { default as IconCopyTo } from '@/assets/icons/copy-to.svg';
+export { default as IconDragDrop } from '@/assets/icons/drag-drop.svg';
 export { default as IconRename } from '@/assets/icons/rename.svg';
 export { default as IconTrash } from '@/assets/icons/trash.svg';
 export { default as IconFiles } from '@/assets/icons/files.svg';

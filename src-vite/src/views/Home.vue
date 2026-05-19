@@ -43,12 +43,13 @@
             data-tauri-drag-region
           >
             <div v-for="item in visibleButtons" :key="item.index">
-              <TButton 
-                :buttonSize="'large'" 
-                :icon="item.icon" 
-                :text="item.text" 
+              <TButton
+                :buttonSize="'large'"
+                :icon="item.icon"
+                :text="item.text"
                 :tooltip="(item as any).tooltip || ''"
                 :selected="config.main.sidebarIndex === item.index"
+                :disabled="item.disabled"
                 @click="clickSidebar(item.index)"
               />
             </div>
@@ -135,7 +136,7 @@
           showDesktopTitleBar ? 'rounded-tl-box' : '',
         ]"
       >
-        <Content :key="libraryVersion" :titlebar="buttons[config.main.sidebarIndex].text"/>
+        <Content :key="libraryVersion" :titlebar="buttons[config.main.sidebarIndex].text" :libraryEmpty="libraryEmpty"/>
       </div>
     </div>
 
@@ -161,6 +162,7 @@ import { useI18n } from 'vue-i18n';
 import { emit, listen } from '@tauri-apps/api/event';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { getName } from '@tauri-apps/api/app';
+import { invoke } from '@tauri-apps/api/core';
 import { config, libConfig } from '@/common/config';
 import { useAppUpdater } from '@/common/updater';
 import { useUIStore } from '@/stores/uiStore';
@@ -181,7 +183,7 @@ import TButton from '@/components/TButton.vue';
 import Content from '@/components/Content.vue';
 import ContextMenu from '@/components/ContextMenu.vue';
 import ManageLibraries from '@/components/ManageLibraries.vue';
-import iconLogo from '@/assets/images/logo.png';
+import iconLogo from '@/assets/images/icon.png';
 
 import {
   IconHeart,
@@ -201,6 +203,19 @@ import {
 const isAlbumReorderMode = ref(false);
 const isSwitchingLibrary = ref(false);
 const libraryVersion = ref(0);
+const libraryEmpty = ref(false);
+
+const checkLibraryEmpty = async () => {
+  try {
+    const albums = await invoke<any[]>('get_all_albums');
+    libraryEmpty.value = (albums?.length ?? 0) === 0;
+    if (libraryEmpty.value) {
+      config.main.sidebarIndex = 0;
+    }
+  } catch {
+    libraryEmpty.value = false;
+  }
+};
 const SETTINGS_BASE_WIDTH = 600;
 const SETTINGS_BASE_HEIGHT = 620;
 
@@ -243,6 +258,7 @@ const appName = ref('');
 const showDebugBadge = import.meta.env.DEV;
 let unlistenOpenPreferences: (() => void) | null = null;
 let unlistenOpenAbout: (() => void) | null = null;
+let unlistenAlbumsRefreshed: (() => void) | null = null;
 const {
   updateAvailable,
   isCheckingUpdate,
@@ -270,7 +286,7 @@ const buttons = computed(() =>  [
 
 const visibleButtons = computed(() =>
   buttons.value
-    .map((item, index) => ({ ...item, index }))
+    .map((item, index) => ({ ...item, index, disabled: libraryEmpty.value && index !== 0 }))
     .filter(item => !item.hidden)
 );
 
@@ -327,7 +343,13 @@ onMounted(async () => {
   });
 
   appConfig.value = await getAppConfig();
-  
+
+  void checkLibraryEmpty();
+
+  unlistenAlbumsRefreshed = await listen('albums-refreshed', () => {
+    void checkLibraryEmpty();
+  });
+
   try {
     const name = await getName();
     if (name) appName.value = name;
@@ -343,6 +365,8 @@ onBeforeUnmount(() => {
   unlistenOpenPreferences = null;
   unlistenOpenAbout?.();
   unlistenOpenAbout = null;
+  unlistenAlbumsRefreshed?.();
+  unlistenAlbumsRefreshed = null;
 });
 
 const doSwitchLibrary = async (libraryId: string) => {
@@ -372,6 +396,7 @@ const doSwitchLibrary = async (libraryId: string) => {
     await libConfig.reload();
     appConfig.value = await getAppConfig();
     libraryVersion.value++;
+    void checkLibraryEmpty();
     await emit('library-switched');
   } catch (error) {
     libConfig._initialized = true;
@@ -392,6 +417,7 @@ const onManageLibrariesOk = async () => {
       // The backend has already switched; reload in-place.
       await libConfig.reload();
       libraryVersion.value++;
+      void checkLibraryEmpty();
       await emit('library-switched');
     } finally {
       isSwitchingLibrary.value = false;
@@ -405,6 +431,7 @@ const onManageLibrariesUpdated = async () => {
 
 // click sidebar
 function clickSidebar(index: number) {
+  if (libraryEmpty.value && index !== 0) return;
   if (config.main.sidebarIndex === index) {
     showPanel.value = !showPanel.value;
   } else {

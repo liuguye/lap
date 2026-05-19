@@ -2,9 +2,9 @@
   <div class="flex flex-col items-start justify-start gap-4 h-full text-base-content/70 cursor-default">
 
     <!-- logo -->
-    <div class="px-4 flex w-full flex-row items-center justify-start gap-4">
+    <div class="px-2 flex w-full flex-row items-center justify-start gap-4">
       <div class="shrink-0">
-        <img src="@/assets/images/logo.png" class="w-20 h-20 rounded-2xl" />
+        <img src="@/assets/images/icon.png" class="w-20 h-20" />
       </div>
       <div class="flex flex-col text-left">
         <h3 class="text-xl">{{ packageInfo.name }}</h3>

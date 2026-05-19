@@ -37,6 +37,16 @@
       "description": "이미지나 비디오가 포함된 폴더를 추가하여 시작하세요"
     }
   },
+  "welcome": {
+    "title": "Lap에 오신 것을 환영합니다",
+    "description": "로컬 사진과 동영상을 아름답게 정리하고 즉시 검색할 수 있습니다.",
+    "add_album_title": "앨범을 추가하여 시작하기",
+    "add_album_description": "사진과 동영상을 스캔할 폴더를 선택하세요.",
+    "search_title": "기억으로 검색",
+    "search_description": "찾고 있는 것을 설명하고, 유사한 사진을 찾고, 선택적 모델 다운로드로 50개 이상의 언어로 검색하세요.",
+    "drag_title": "드래그하여 가져오기",
+    "drag_description": "Finder, 탐색기 또는 브라우저에서 열린 앨범 폴더로 사진을 직접 드래그하세요."
+  },
   "search": {
     "title": "이미지 검색",
     "search_images": "검색",
@@ -280,7 +290,7 @@
       "albums": "앨범을 찾을 수 없습니다. 이미지나 비디오가 있는 폴더를 추가하세요",
       "files": "파일을 찾을 수 없습니다",
       "folder_files": "이 폴더에는 파일이 없습니다",
-      "folder_files_hint": "파일 또는 브라우저 이미지를 여기에 놓아 가져오세요.",
+      "folder_files_hint": "하위 폴더를 찾아보거나 설정에서 '하위 폴더의 파일 표시'를 활성화하세요.",
       "folders": "폴더를 찾을 수 없습니다",
       "favorite_folders": "즐겨찾기한 폴더를 찾을 수 없습니다",
       "favorite_folders_hint": "앨범에서 폴더를 즐겨찾기에 추가하면 여기에서 파일과 하위 폴더를 볼 수 있습니다",

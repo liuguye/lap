@@ -37,6 +37,16 @@
       "description": "Ajoutez un album pour commencer"
     }
   },
+  "welcome": {
+    "title": "Bienvenue sur Lap",
+    "description": "Vos photos et vidéos locales, organisées et instantanément recherchables.",
+    "add_album_title": "Commencez par ajouter un album",
+    "add_album_description": "Sélectionnez un dossier pour analyser vos photos et vidéos.",
+    "search_title": "Recherche par souvenir",
+    "search_description": "Décrivez ce que vous cherchez, trouvez des photos similaires et recherchez dans plus de 50 langues avec un téléchargement de modèle optionnel.",
+    "drag_title": "Glisser pour importer",
+    "drag_description": "Glissez des photos depuis le Finder, l'Explorateur ou votre navigateur directement dans n'importe quel dossier d'album ouvert."
+  },
   "search": {
     "title": "Recherche d'images",
     "search_images": "Recherche",
@@ -280,7 +290,7 @@
       "albums": "Aucun album trouvé. Ajoutez un dossier avec des images ou des vidéos",
       "files": "Aucun fichier trouvé",
       "folder_files": "Ce dossier ne contient aucun fichier",
-      "folder_files_hint": "Déposez des fichiers ou des images du navigateur ici pour les importer.",
+      "folder_files_hint": "Parcourez les sous-dossiers ou activez « Afficher les fichiers des sous-dossiers » dans les paramètres.",
       "folders": "Aucun dossier trouvé",
       "favorite_folders": "Aucun dossier favori trouvé",
       "favorite_folders_hint": "Mettez un dossier en favori dans Albums pour voir ici ses fichiers et sous-dossiers",

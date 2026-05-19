@@ -366,7 +366,7 @@ import {
 } from '@/common/icons';
 import { isMac } from '@/common/utils';
 import ContextMenu from '@/components/ContextMenu.vue';
-import iconLogo from '@/assets/images/logo.png';
+import iconLogo from '@/assets/images/icon.png';
 import { useFileMenuItems } from '@/common/fileMenu';
 
 const Video = defineAsyncComponent(() => import('@/components/Video.vue'));

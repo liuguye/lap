@@ -546,7 +546,9 @@ const clickEditAlbum = async (folderPathParam: string, newName: string, newDescr
       albums.value.push(newAlbum);
       clickAlbum(newAlbum);
       showAlbumEdit.value = false;
-      
+
+      tauriEmit('albums-refreshed');
+
       // add the new album to the index queue
       libConfig.index.status = 1;
       removePausedAlbum(newAlbum.id);
@@ -640,6 +642,8 @@ const clickRemoveAlbum = async () => {
     // remove the album from the list
     albums.value = albums.value.filter(album => album.id !== albumId);
     showAlbumEdit.value = false; // Close the edit dialog if it's open
+
+    tauriEmit('albums-refreshed');
 
     selection.resetSelection();
   }

@@ -37,6 +37,16 @@
       "description": "Adicione um álbum para começar"
     }
   },
+  "welcome": {
+    "title": "Bem-vindo ao Lap",
+    "description": "Suas fotos e vídeos locais, organizados e pesquisáveis instantaneamente.",
+    "add_album_title": "Comece adicionando um álbum",
+    "add_album_description": "Selecione uma pasta para escanear suas fotos e vídeos.",
+    "search_title": "Pesquise por memória",
+    "search_description": "Descreva o que você procura, encontre fotos semelhantes e pesquise em mais de 50 idiomas com um download de modelo opcional.",
+    "drag_title": "Arraste para importar",
+    "drag_description": "Arraste fotos do Finder, Explorador ou navegador diretamente para qualquer pasta de álbum aberta."
+  },
   "search": {
     "title": "Pesquisa de imagem",
     "search_images": "Pesquisar",
@@ -280,7 +290,7 @@
       "albums": "Nenhum álbum encontrado. Adicione uma pasta com imagens ou vídeos",
       "files": "Nenhum arquivo encontrado",
       "folder_files": "Esta pasta não contém arquivos",
-      "folder_files_hint": "Solte arquivos ou imagens do navegador aqui para importá-los.",
+      "folder_files_hint": "Navegue pelas subpastas ou ative 'Mostrar arquivos de subpastas' nas Configurações.",
       "folders": "Nenhuma pasta encontrada",
       "favorite_folders": "Nenhuma pasta favorita encontrada",
       "favorite_folders_hint": "Favorite uma pasta em Álbuns para ver aqui seus arquivos e subpastas",

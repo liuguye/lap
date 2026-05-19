@@ -37,6 +37,16 @@
       "description": "Añade un álbum con imágenes o vídeos para empezar"
     }
   },
+  "welcome": {
+    "title": "Bienvenido a Lap",
+    "description": "Tus fotos y videos locales, organizados y buscables al instante.",
+    "add_album_title": "Comienza añadiendo un álbum",
+    "add_album_description": "Selecciona una carpeta para escanear tus fotos y videos.",
+    "search_title": "Busca por recuerdo",
+    "search_description": "Describe lo que buscas, encuentra fotos similares y busca en más de 50 idiomas con una descarga de modelo opcional.",
+    "drag_title": "Arrastra para importar",
+    "drag_description": "Arrastra fotos desde Finder, Explorador o tu navegador directamente a cualquier carpeta de álbum abierta."
+  },
   "search": {
     "title": "Búsqueda de imágenes",
     "search_images": "Buscar",
@@ -280,7 +290,7 @@
       "albums": "No se encontraron álbumes. Añade una carpeta con imágenes o videos",
       "files": "No se encontraron archivos",
       "folder_files": "Esta carpeta no contiene archivos",
-      "folder_files_hint": "Suelta archivos o imágenes del navegador aquí para importarlos.",
+      "folder_files_hint": "Explore las subcarpetas o active 'Mostrar archivos de subcarpetas' en Configuración.",
       "folders": "No se encontraron carpetas",
       "favorite_folders": "No se encontraron carpetas favoritas",
       "favorite_folders_hint": "Marca una carpeta como favorita en Álbumes para ver aquí sus archivos y subcarpetas",

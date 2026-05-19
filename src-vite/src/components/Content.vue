@@ -18,6 +18,7 @@
 
     <!-- title bar -->
     <div
+      v-if="!showWelcomeContent"
       class="absolute top-0 left-0 right-0 px-2 h-12 flex flex-row flex-nowrap items-center justify-between bg-base-300/80 backdrop-blur-md z-30 overflow-hidden"
       data-tauri-drag-region
     >
@@ -172,19 +173,20 @@
           :class="[
             'flex-1 flex',
             gridViewLayoutClass,
-            config.settings.grid.showFilmStrip ? (config.settings.showStatusBar ? 'mt-12 mb-8' : 'mt-12 mb-1') : ''
+            config.settings.grid.showFilmStrip && !showWelcomeContent ? (config.settings.showStatusBar ? 'mt-12 mb-8' : 'mt-12 mb-1') : ''
           ]"
         >
           <div class="relative" 
-            :class="{ 'flex-1': !config.settings.grid.showFilmStrip }"
+            :class="{ 'flex-1': showWelcomeContent || !config.settings.grid.showFilmStrip }"
             :style="{ 
-              height: (config.settings.grid.showFilmStrip && !isFilmstripVertical) ? itemSize + 'px' : '',
-              width: (config.settings.grid.showFilmStrip && isFilmstripVertical) ? itemWidth + 'px' : ''
+              height: (config.settings.grid.showFilmStrip && !showWelcomeContent && !isFilmstripVertical) ? itemSize + 'px' : '',
+              width: (config.settings.grid.showFilmStrip && !showWelcomeContent && isFilmstripVertical) ? itemWidth + 'px' : ''
             }"
           >
             <!-- grid view -->
             <div ref="gridScrollContainerRef" class="absolute w-full h-full">
-              <GridView ref="gridViewRef"
+              <Welcome v-if="showWelcomeContent" />
+              <GridView v-else ref="gridViewRef"
                 :selected-item-index="selectedItemIndex"
                 :fileList="fileList"
                 :timeline-data="timelineData"
@@ -203,7 +205,7 @@
                 @layout-update="handleLayoutUpdate"
               />
               <!-- Navigation buttons -->
-              <div v-if="config.settings.grid.showFilmStrip && fileList.length > 0" 
+              <div v-if="!showWelcomeContent && config.settings.grid.showFilmStrip && fileList.length > 0" 
                 class="absolute z-10 inset-1 flex items-center justify-between pointer-events-none"
                 :class="{ 'flex-col': isFilmstripVertical }"
               >
@@ -231,12 +233,12 @@
             </div>
           </div>
 
-          <div v-if="config.settings.grid.showFilmStrip" 
+          <div v-if="!showWelcomeContent && config.settings.grid.showFilmStrip" 
             :class="isFilmstripVertical ? 'w-1 shrink-0' : 'h-1 shrink-0'"
           ></div>
 
           <!-- film strip preview -->
-          <div v-if="config.settings.grid.showFilmStrip" ref="previewDiv" 
+          <div v-if="!showWelcomeContent && config.settings.grid.showFilmStrip" ref="previewDiv" 
             class="flex-1 bg-base-200 overflow-hidden"
           >
             <div v-if="selectedItemIndex >= 0 && selectedItemIndex < fileList.length"
@@ -270,7 +272,7 @@
         </div> <!-- grid view -->
 
         <!-- custom scrollbar -->
-        <div v-if="!config.settings.grid.showFilmStrip && fileList.length > 0" 
+        <div v-if="!showWelcomeContent && !config.settings.grid.showFilmStrip && fileList.length > 0" 
           class="mt-12 shrink-0" 
           :class="[ config.settings.showStatusBar ? 'mb-8' : 'mb-1' ]"
         >
@@ -619,6 +621,7 @@ import { isWin, isMac, setTheme, separator,
 import DropDownSelect from '@/components/DropDownSelect.vue';
 import ProgressBar from '@/components/ProgressBar.vue';
 import GridView  from '@/components/GridView.vue';
+import Welcome from '@/components/Welcome.vue';
 import MediaViewer from '@/components/MediaViewer.vue';
 import MessageBox from '@/components/MessageBox.vue';
 import IndexRecoveryDialog from '@/components/IndexRecoveryDialog.vue';
@@ -678,7 +681,8 @@ import {
 const thumbnailPlaceholder = new URL('@/assets/images/image-file.png', import.meta.url).href;
 
 const props = defineProps({
-  titlebar: String
+  titlebar: String,
+  libraryEmpty: Boolean
 });
 
 /// i18n
@@ -1193,6 +1197,14 @@ const scanVisiblePrefetchEnd = ref(0);
 const pendingRestoreScrollTop = ref<number | null>(null);
 
 const isFilmstripVertical = computed(() => config.settings.grid.showFilmStrip && config.settings.grid.previewPosition >= 2);
+
+const libraryChecked = ref(false);
+
+watch(() => props.libraryEmpty, () => {
+  libraryChecked.value = true;
+}, { immediate: true });
+
+const showWelcomeContent = computed(() => props.libraryEmpty && libraryChecked.value);
 
 const gridViewLayoutClass = computed(() => {
   const pos = config.settings.grid.previewPosition || 0;
