@@ -391,8 +391,17 @@ fn file_id(path: &Path) -> Option<u64> {
 
 #[cfg(windows)]
 fn file_id(path: &Path) -> Option<u64> {
-    use std::os::windows::fs::MetadataExt;
-    fs::metadata(path).ok().and_then(|m| m.file_index().ok())
+    use std::fs::OpenOptions;
+    use std::os::windows::fs::{MetadataExt, OpenOptionsExt};
+
+    OpenOptions::new()
+        .read(true)
+        .custom_flags(0x0200_0000) // FILE_FLAG_BACKUP_SEMANTICS for directories
+        .open(path)
+        .ok()?
+        .metadata()
+        .ok()
+        .and_then(|m| m.file_index())
 }
 
 pub fn authorize_directory_scope(
