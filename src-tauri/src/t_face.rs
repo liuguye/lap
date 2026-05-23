@@ -114,6 +114,10 @@ impl FaceEngine {
             .map_err(|e| e.to_string())?
             .with_intra_threads(4)
             .map_err(|e| e.to_string())?
+            .with_execution_providers(
+                [ort::execution_providers::CUDAExecutionProvider::default().build()],
+            )
+            .map_err(|e| e.to_string())?
             .commit_from_file(&detection_model_path)
             .map_err(|e| format!("Failed to load detection model: {}", e))?;
 
@@ -125,6 +129,10 @@ impl FaceEngine {
             .with_optimization_level(GraphOptimizationLevel::Level3)
             .map_err(|e| e.to_string())?
             .with_intra_threads(4)
+            .map_err(|e| e.to_string())?
+            .with_execution_providers(
+                [ort::execution_providers::CUDAExecutionProvider::default().build()],
+            )
             .map_err(|e| e.to_string())?
             .commit_from_file(&embedding_model_path)
             .map_err(|e| format!("Failed to load embedding model: {}", e))?;

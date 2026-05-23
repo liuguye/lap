@@ -118,6 +118,10 @@ impl AiEngine {
             .map_err(|e| e.to_string())?
             .with_intra_threads(AI_INTRA_THREADS)
             .map_err(|e| e.to_string())?
+            .with_execution_providers(
+                [ort::execution_providers::CUDAExecutionProvider::default().build()],
+            )
+            .map_err(|e| e.to_string())?
             .commit_from_file(path)
             .map_err(|e| format!("Failed to load {} model from {:?}: {}", model_name, path, e))
     }
