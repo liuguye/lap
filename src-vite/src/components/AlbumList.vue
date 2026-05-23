@@ -793,6 +793,10 @@ const clickFinalSubFolder = async (albumIdVal: number, folderPathVal: string) =>
   // expandFinalFolder returns null for the root path (empty relative path),
   // so we handle it here instead.
   if (folderPathVal === album.path) {
+    if (selection.selected.value) {
+      clickAlbum(album);
+      return;
+    }
     await expandAlbum(album, true);
     const rootFolder = album.children?.[0];
     if (rootFolder) {

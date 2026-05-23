@@ -574,6 +574,7 @@
     :message="$t('msgbox.drop_import.message')"
     :cancelText="''"
     @ok="showDropWarning = false"
+    @cancel="showDropWarning = false"
   />
 
   <!-- Drop overlay -->
