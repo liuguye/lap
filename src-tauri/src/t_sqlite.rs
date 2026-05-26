@@ -1037,7 +1037,9 @@ impl AFile {
                 (None, None, None, None)
             };
 
-        let should_swap_dimensions_for_orientation = !t_image::is_heic_path(file_path);
+        // RAW dimensions are already orientation-adjusted in `get_raw_dimensions`.
+        let should_swap_dimensions_for_orientation =
+            file_type != 3 && !t_image::is_heic_path(file_path);
 
         let file = Self {
             id: None,

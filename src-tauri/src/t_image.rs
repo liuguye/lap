@@ -647,20 +647,7 @@ pub fn get_raw_preview_image(file_path: &str) -> Result<Option<Vec<u8>>, String>
 }
 
 pub fn get_raw_dimensions(file_path: &str) -> Result<(u32, u32), String> {
-    let should_swap_dimensions = |orientation: i32, raw_flip: i32| -> bool {
-        match orientation {
-            5 | 6 | 7 | 8 => true,
-            1 => matches!(raw_flip, 5 | 6),
-            _ => false,
-        }
-    };
-
-    if let Ok((mut width, mut height, raw_flip)) = t_libraw::get_raw_dimensions_with_flip(file_path)
-    {
-        let orientation = get_image_orientation(file_path);
-        if should_swap_dimensions(orientation, raw_flip) {
-            std::mem::swap(&mut width, &mut height);
-        }
+    if let Ok((width, height, _raw_flip)) = t_libraw::get_raw_dimensions_with_flip(file_path) {
         if width > 0 && height > 0 {
             return Ok((width, height));
         }
