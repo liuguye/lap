@@ -1,16 +1,15 @@
 <div align="center">
-  <img src="../../docs/public/icon.png" alt="Logo Lap" width="120" style="border-radius: 20px">
+  <img src="../docs/public/icon.png" alt="Logo Lap" width="120" style="border-radius: 20px">
   <h1>Lap - Gestionnaire de photos privées locales</h1>
   <h3>Gestionnaire de photos de bureau open source pour macOS, Windows et Linux.</h3>
   <p>
     <a href="https://github.com/julyx10/lap/releases"><img src="https://img.shields.io/github/v/release/julyx10/lap" alt="GitHub release"></a>
     <a href="https://github.com/julyx10/lap/releases"><img src="https://img.shields.io/github/downloads/julyx10/lap/total" alt="GitHub all releases"></a>
     <a href="https://github.com/julyx10/lap/stargazers"><img src="https://img.shields.io/github/stars/julyx10/lap" alt="GitHub stars"></a>
-    <a href="https://github.com/julyx10/lap/blob/main/LICENSE"><img src="https://img.shields.io/github/license/julyx10/lap" alt="GitHub license"></a>
   </p>
 </div>
 
-[English](../README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Deutsch](README.de.md) | Français | [Español](README.es.md) | [Português](README.pt.md) | [Русский](README.ru.md)
+[English](../README.md) | [Deutsch](README.de.md) | Français | [Español](README.es.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
 
 Lap est un gestionnaire de photos open source et local-first conçu pour parcourir les albums familiaux, retrouver rapidement d'anciennes photos et gérer de grandes bibliothèques multimédias personnelles hors ligne.
 C'est une alternative respectueuse de la vie privée aux services de photos en ligne : pas de téléchargement forcé, recherche IA locale, flux de travail centré sur les dossiers, et gratuit à utiliser.
@@ -23,21 +22,11 @@ C'est une alternative respectueuse de la vie privée aux services de photos en l
 
 Ouvrez la [page des dernières versions](https://github.com/julyx10/lap/releases/latest), puis téléchargez le fichier correspondant à votre système :
 
-| Plateforme | Paquet | Statut |
+| Plateforme | Paquet | Remarque |
 | :-- | :-- | :-- |
-| **macOS (Apple Silicon)** | `aarch64.dmg` | Notarié par Apple |
-| **macOS (Intel)** | `x64.dmg` | Notarié par Apple |
-| **Windows 10/11 (x64)** | `_x64_en-US.msi` | Actuellement non signé (un avertissement SmartScreen peut apparaître) |
-| **Windows 10/11 (ARM64)** | `_arm64_en-US.msi` | Actuellement non signé (un avertissement SmartScreen peut apparaître) |
-| **Ubuntu/Debian (amd64)** | `_amd64.deb` | Pour un meilleur support de la lecture vidéo, voir la note Linux ci-dessous. |
-
-### Note sur la lecture vidéo sous Linux
-
-Sur Ubuntu/Debian/Linux Mint, installez ces paquets pour un meilleur support de la lecture vidéo :
-
-```bash
-sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
-```
+| **macOS (Apple Silicon / Intel)** | `_aarch64.dmg` / `_x64.dmg` | Notarié par Apple |
+| **Windows 10/11 (x64 / ARM64)** | `_x64_en-US.msi` / `_arm64_en-US.msi` | Non signé — si SmartScreen bloque le téléchargement, cliquez sur **Conserver quand même** |
+| **Linux (amd64 / arm64)** | `_amd64.deb` / `_arm64.deb` | Pour les distributions basées sur Debian (Ubuntu, Debian, Linux Mint, etc.) |
 
 ## Captures d'écran
 
@@ -48,8 +37,6 @@ sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
 <p align="center">
   <img src="../docs/public/screenshots/lap-home-0.1.10_2.png" alt="Capture d'écran de la recherche de photos par IA locale Lap" width="900">
 </p>
-
-> Les images d'exemple des captures d'écran proviennent de [Wikimedia Commons](https://commons.wikimedia.org/).
 
 ## Pourquoi Lap
 
@@ -67,27 +54,21 @@ sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
 - **Édition sur place** avec recadrage, rotation, retournement, redimensionnement et ajustements de base.
 - **Garder les dossiers synchronisés** avec des opérations sensibles au système de fichiers et un support de rafraîchissement.
 - **Utiliser les outils de recherche locaux** tels que la recherche texte/image, la recherche d'images similaires, le regroupement de visages et les tags intelligents.
+- **Rechercher dans plus de 50 langues** avec des modèles multilingues optionnels, disponibles en téléchargement supplémentaire si nécessaire.
 - **Ouvrir les formats d'image modernes** y compris WebP, HEIC/HEIF/HIF, AVIF et JXL (JPEG XL).
 - **Consulter les photos RAW** avec un décodage intégré pour plus de 20 formats RAW d'appareils photo (CR2, NEF, ARW, DNG, etc.).
 - **Large compatibilité vidéo** : prise en charge des formats MP4, MOV, AVI, MKV et de plus de 20 autres formats avec optimisation multiplateforme.
 
-## Fonctionnalités prévues
-
-- **Support des Live Photos et Motion Photos** pour les flux de travail mixtes photo/vidéo.
-- **Étendre le support des métadonnées** pour les flux de travail EXIF, XMP et IPTC.
-
 ## Compiler à partir des sources
 
 Configuration requise : Node.js 20+, pnpm, Rust stable.
-
-Pour la lecture vidéo sous Linux, voir la note sur les paquets dans la section téléchargement ci-dessus.
 
 ```bash
 # Dépendances système macOS
 xcode-select --install
 brew install nasm pkg-config autoconf automake libtool cmake
 
-# Dépendances système Linux (Ubuntu/Debian)
+# Dépendances système Linux
 # sudo apt install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev \
 #   patchelf nasm clang pkg-config autoconf automake libtool cmake
 
@@ -109,6 +90,14 @@ cargo tauri dev
 | Images | JPG/JPEG, PNG, GIF, BMP, TIFF, WebP, HEIC/HEIF/HIF, AVIF, JXL |
 | Photos RAW | CR2, CR3, CRW, NEF, NRW, ARW, SRF, SR2, RAF, RW2, ORF, PEF, DNG, SRW, RWL, MRW, 3FR, MOS, DCR, KDC, ERF, MEF, RAW, MDC |
 | Vidéos | MP4, MOV, M4V, MKV, AVI, FLV, TS/M2TS, WMV, WebM, 3GP/3G2, F4V, VOB, MPG/MPEG, ASF, DIVX et plus. La lecture H.264 est supportée sur toutes les plateformes, avec un traitement automatique de compatibilité lorsque la lecture native n'est pas disponible. HEVC/H.265 et VP9 sont supportés nativement sur macOS. |
+
+### Note sur la lecture vidéo sous Linux
+
+Sur Linux Mint/Ubuntu/Debian, installez ces paquets pour un meilleur support de la lecture vidéo :
+
+```bash
+sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
+```
 
 ## Architecture
 
