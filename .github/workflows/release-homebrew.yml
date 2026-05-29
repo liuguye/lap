@@ -75,14 +75,15 @@ jobs:
           INTEL_SHA: ${{ steps.download.outputs.intel_sha }}
         run: |
           ruby -e '
-            content = File.read("lap.rb")
+            path = "Casks/lap.rb"
+            content = File.read(path)
             content.sub!(/version "[\d.]+"/, %(version "#{ENV["NEW_VERSION"]}")) or raise "version pattern not found in lap.rb"
             content.sub!(
               /sha256 arm:\s+"[a-f0-9]+",\s*\n\s+intel:\s+"[a-f0-9]+"/,
               %(sha256 arm:   "#{ENV["ARM_SHA"]}",\n         intel: "#{ENV["INTEL_SHA"]}")
             ) or raise "sha256 block pattern not found in lap.rb"
-            File.write("lap.rb", content)
-            puts File.read("lap.rb")
+            File.write(path, content)
+            puts File.read(path)
           '
 
       - name: Commit and push
@@ -91,6 +92,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add lap.rb
+          git add Casks/lap.rb
           git diff --cached --quiet || git commit -m "Update Lap to v${VERSION}"
           git push
