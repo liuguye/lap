@@ -34,7 +34,7 @@
     >
       <div
         v-if="isDateHeader(item)"
-        class="w-full h-full flex items-end gap-2 p-2 text-sm font-medium text-base-content/70 select-none group"
+        class="w-full h-full flex items-center gap-1 px-1 text-base-content/70 select-none group"
         :class="{ 'cursor-pointer hover:text-base-content': selectMode }"
         @click="selectMode && toggleDateGroupSelection(item)"
       >
@@ -47,7 +47,9 @@
           @click.stop
           @change="(event) => toggleDateGroupSelection(item, (event.target as HTMLInputElement).checked)"
         />
-        {{ item.label }}
+        <component :is="config.settings.grid.dateGrouping === 1 ? IconCalendarDay : IconCalendarMonth" v-if="!selectMode" class="w-5 h-5" />
+        <span>{{ item.label }}</span>
+        <span class="text-base-content/30 text-xs">({{ (item.endIndex - item.startIndex).toLocaleString() }})</span>
       </div>
       <div v-else class="w-full h-full flex items-center justify-center">
         <Thumbnail
@@ -68,9 +70,11 @@
     <!-- Empty State / Loading -->
     <div v-else class="absolute inset-0 flex flex-col items-center justify-center">
       <div class="text-base-content/30 flex flex-col items-center gap-2 text-center px-4">
-        <template v-if="!contentReady">
-          <!-- <span>{{ $t('tooltip.loading') }}</span> -->
+        <template v-if="showDelayedLoading">
+          <span class="loading loading-dots loading-lg text-primary"></span>
+          <span>{{ $t('tooltip.loading') }}</span>
         </template>
+        <template v-else-if="!contentReady" />
         <template v-else-if="showFolderFiles && folderExcluded">
           <span>{{ $t('tooltip.not_found.folder_excluded') }}</span>
           <span class="text-xs">{{ $t('tooltip.not_found.folder_excluded_hint') }}</span>
@@ -93,9 +97,11 @@ import { watch, ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n';
 import { useUIStore } from '@/stores/uiStore';
 import { config } from '@/common/config';
+import { formatDate } from '@/common/utils';
 import Thumbnail from '@/components/Thumbnail.vue';
 import VirtualScroll from '@/components/VirtualScroll.vue';
 import { calculateJustifiedLayout, calculateLinearRowLayout, calculateLinearColumnLayout, calculateMasonryLayout, type Geometry } from '@/common/layout';
+import { IconCalendarDay, IconCalendarMonth } from '@/common/icons';
 
 const props = withDefaults(defineProps<{
   selectedItemIndex: number;
@@ -131,12 +137,17 @@ const emit = defineEmits([
 ]);
 
 const uiStore = useUIStore();
-const { locale } = useI18n();
+const { locale, messages } = useI18n();
+const localeMsg = computed(() => messages.value[locale.value] as any);
 const containerRef = ref<HTMLElement | null>(null);
 const scroller = ref<any>(null);
 const columnCount = ref(4);
 const containerWidth = ref(0);
-const headerHeight = 32;
+const headerHeight = 48;
+
+function isGeometryGridStyle(style: number) {
+  return style === 2 || style === 3;
+}
 
 const isTimeSort = computed(() => [0, 1, 2].includes(Number(props.sortType)));
 const dateGroupingEnabled = computed(() =>
@@ -152,11 +163,10 @@ function formatDateGroupLabel(marker: any, mode: number) {
   const date = Number(marker.date || 1);
   if (!year || !month) return '';
 
-  const value = new Date(year, month - 1, mode === 1 ? date : 1);
-  const options: Intl.DateTimeFormatOptions = mode === 1
-    ? { year: 'numeric', month: 'long', day: 'numeric' }
-    : { year: 'numeric', month: 'long' };
-  return new Intl.DateTimeFormat(locale.value, options).format(value);
+  if (mode === 1) {
+    return formatDate(year, month, date, localeMsg.value.format.date_long);
+  }
+  return formatDate(year, month, 1, localeMsg.value.format.month);
 }
 
 const dateGroupMarkers = computed(() => {
@@ -245,7 +255,7 @@ const groupedLayoutGeometryResult = computed(() => {
 
   if (showFilmStrip) return { boxes: [], contentSize: 0 };
 
-  if (style !== 2) {
+  if (!isGeometryGridStyle(style)) {
     let y = 0;
     let col = 0;
 
@@ -283,7 +293,7 @@ const groupedLayoutGeometryResult = computed(() => {
 
   const flushGroup = () => {
     if (groupFiles.length === 0) return;
-    const result = config.settings.grid.justifyMode === 1
+    const result = config.settings.grid.style === 3
       ? calculateMasonryLayout(groupFiles, containerWidth.value, size, 0)
       : calculateJustifiedLayout(groupFiles, containerWidth.value, size, 0);
     result.boxes.forEach((box, index) => {
@@ -325,42 +335,40 @@ const layoutGeometryResult = computed(() => {
   }
 
   if (showFilmStrip) {
-    if (style === 2) {
+    if (isGeometryGridStyle(style)) {
       const isVertical = config.settings.grid.previewPosition >= 2;
-      if (isVertical && containerWidth.value > 0) {
-        // Justified Layout in Filmstrip (Vertical)
+      if (isVertical) {
+        if (containerWidth.value <= 0) return { boxes: [], contentSize: 0 };
         const result = calculateLinearColumnLayout(props.fileList, containerWidth.value, 0);
         return { boxes: result.boxes, contentSize: result.containerHeight };
-      } else {
-        // Justified Layout in Filmstrip (Horizontal)
-        const result = calculateLinearRowLayout(props.fileList, size, 0);
-        return { boxes: result.boxes, contentSize: result.containerWidth };
       }
+      const result = calculateLinearRowLayout(props.fileList, size, 0);
+      return { boxes: result.boxes, contentSize: result.containerWidth };
     }
-    return { boxes: [], contentSize: 0 };
-  } else if (style === 2 && containerWidth.value > 0) {
-    if (config.settings.grid.justifyMode === 1) {
+  } else {
+    if (style === 2 && containerWidth.value > 0) {
+      const result = calculateJustifiedLayout(props.fileList, containerWidth.value, size, 0);
+      return { boxes: result.boxes, contentSize: result.containerHeight };
+    }
+    else if (style === 3 && containerWidth.value > 0) {
       const result = calculateMasonryLayout(props.fileList, containerWidth.value, size, 0);
       return { boxes: result.boxes, contentSize: result.containerHeight };
     }
-    const result = calculateJustifiedLayout(
-      props.fileList,
-      containerWidth.value,
-      size,
-      0
-    );
-    return { boxes: result.boxes, contentSize: result.containerHeight };
   }
   return { boxes: [], contentSize: 0 };
 });
 
 const layoutGeometry = computed(() => layoutGeometryResult.value.boxes);
 const layoutContentHeight = computed(() => layoutGeometryResult.value.contentSize);
+const usesGeometryLayout = computed(() =>
+  dateGroupingEnabled.value ||
+  isGeometryGridStyle(config.settings.grid.style)
+);
 const virtualScrollGeometry = computed(() =>
-  dateGroupingEnabled.value || config.settings.grid.style === 2 ? layoutGeometry.value : undefined
+  usesGeometryLayout.value ? layoutGeometry.value : undefined
 );
 const virtualScrollContentHeight = computed(() =>
-  dateGroupingEnabled.value || config.settings.grid.style === 2 ? layoutContentHeight.value : undefined
+  usesGeometryLayout.value ? layoutContentHeight.value : undefined
 );
 
 const isLayoutTransitioning = ref(false);
@@ -405,6 +413,8 @@ const filmStripItemSize = computed(() => {
 });
 
 let resizeObserver: ResizeObserver | null = null;
+const showDelayedLoading = ref(false);
+let loadingDelayTimer: ReturnType<typeof setTimeout> | null = null;
 
 function updateColumnCount() {
   if (containerRef.value) {
@@ -420,7 +430,7 @@ function updateLayout() {
   emit('layout-update', { height: layoutContentHeight.value });
 }
 
-watch(() => [config.settings.grid.size, config.settings.grid.style, config.settings.grid.showFilmStrip, config.settings.grid.justifyMode, config.settings.grid.dateGrouping, props.sortType], () => {
+watch(() => [config.settings.grid.size, config.settings.grid.style, config.settings.grid.showFilmStrip, config.settings.grid.dateGrouping, props.sortType], () => {
   isLayoutTransitioning.value = true;
   updateColumnCount();
   
@@ -446,6 +456,30 @@ watch(() => props.timelineData, () => {
 watch(() => props.layoutVersion, () => {
   updateLayout();
 });
+
+watch(
+  () => props.contentReady,
+  (ready) => {
+    if (loadingDelayTimer) {
+      clearTimeout(loadingDelayTimer);
+      loadingDelayTimer = null;
+    }
+
+    if (ready) {
+      showDelayedLoading.value = false;
+      return;
+    }
+
+    showDelayedLoading.value = false;
+    loadingDelayTimer = setTimeout(() => {
+      loadingDelayTimer = null;
+      if (!props.contentReady) {
+        showDelayedLoading.value = true;
+      }
+    }, 500);
+  },
+  { immediate: true }
+);
 
 watch(layoutContentHeight, (newHeight) => {
   emit('layout-update', { height: newHeight });
@@ -478,6 +512,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeyDown);
+  if (loadingDelayTimer) {
+    clearTimeout(loadingDelayTimer);
+    loadingDelayTimer = null;
+  }
   if (containerRef.value) {
     containerRef.value.removeEventListener('gesturestart', onGestureStart as any);
     containerRef.value.removeEventListener('gesturechange', onGestureChange as any);
@@ -602,7 +640,7 @@ function scrollToItem(index: number) {
     let itemPos = 0;
     let itemSizeValue = 0;
 
-    if (config.settings.grid.style === 2 && layoutGeometry.value[displayIndex]) {
+    if (layoutGeometry.value[displayIndex]) {
       const box = layoutGeometry.value[displayIndex];
       itemPos = isHorizontal ? box.x : box.y;
       itemSizeValue = isHorizontal ? box.width : box.height;
@@ -645,7 +683,9 @@ function getScrollTop() {
 }
 
 function getNextItemIndex(currentIndex: number, direction: 'up' | 'down'): number {
-  if (config.settings.grid.style !== 2 || layoutGeometry.value.length === 0) {
+  const style = config.settings.grid.style;
+  const supportsGeometryNavigation = style === 2 || (!config.settings.grid.showFilmStrip && isGeometryGridStyle(style));
+  if (!supportsGeometryNavigation || layoutGeometry.value.length === 0) {
     return -1;
   }
 

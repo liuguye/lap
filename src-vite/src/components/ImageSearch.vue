@@ -79,7 +79,7 @@
             'sidebar-item sidebar-item-media text-sm group',
             libConfig.search.searchHistoryIndex === index ? 'sidebar-item-selected' : 'hover:text-base-content hover:bg-base-100/70',
           ]"
-          @click="handleSearchHistoryClick(index, item)"
+          @click="handleSearchHistoryClick(index)"
         >
         <div v-if="typeof item !== 'string' && item.fileId" class="relative w-10 h-10 mr-2 shrink-0 overflow-hidden rounded-box">
            <img 
@@ -91,16 +91,16 @@
         </div>
           <IconSearch v-else class="w-4 h-4 mx-1 shrink-0" />
           
-          <span class="sidebar-item-label">{{ typeof item === 'string' ? item : item.text }}</span>
-          <ContextMenu
-            :class="[
-              'ml-auto flex flex-row items-center text-base-content/30',
-              libConfig.search.searchHistoryIndex != index ? 'invisible group-hover:visible' : ''
-            ]"
-            :iconMenu="IconMore"
-            :menuItems="searchHistoryMenuItems"
-            :smallIcon="true"
-          />
+	          <span class="sidebar-item-label">{{ typeof item === 'string' ? item : item.text }}</span>
+	          <ContextMenu
+	            :class="[
+	              'ml-auto flex flex-row items-center text-base-content/30',
+	              libConfig.search.searchHistoryIndex != index ? 'invisible group-hover:visible' : ''
+	            ]"
+	            :iconMenu="IconMore"
+	            :menuItems="() => getSearchHistoryMenuItems(index)"
+	            :smallIcon="true"
+	          />
         </div>  
       </div>
 
@@ -204,7 +204,6 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { config, libConfig } from '@/common/config';
-import { listen } from '@tauri-apps/api/event';
 import { useUIStore } from '@/stores/uiStore';
 import MessageBox from '@/components/MessageBox.vue';
 import { getFileInfo, getFileThumbById } from '@/common/api';
@@ -241,17 +240,17 @@ const searchPanelMenuItems = computed(() => [
   },
 ]);
 
-const searchHistoryMenuItems = computed(() => {
+function getSearchHistoryMenuItems(index: number) {
   return [
     {
       label: localeMsg.value.menu.home.delete,
       icon: IconTrash,
       action: () => {
-        deleteHistoryItem();
+        deleteHistoryItem(index);
       }
     },
   ];
-});
+}
 
 // search query
 const searchInputRef = ref<HTMLInputElement | null>(null);
@@ -264,23 +263,13 @@ function syncSearchState() {
       const history = libConfig.search.searchHistory as any[];
       const item = history[libConfig.search.searchHistoryIndex];
       if (item) {
-        // Handle both string and object formats
         const text = typeof item === 'string' ? item : item.text;
         libConfig.search.searchText = text;
         searchQuery.value = text;
       }
     } else {
-      // If index is -1, do not clear searchText. 
-      // It might be loaded from persistence or typed by user.
       searchQuery.value = libConfig.search.searchText || '';
-      nextTick(() => {
-        focusSearchInput();
-      });
     }
-  } else if (libConfig.search.searchType === 2) {
-    nextTick(() => {
-      focusSearchInput();
-    });
   }
 }
 
@@ -298,26 +287,22 @@ function focusSearchInput() {
 function handleTabClick(type: number) {
   libConfig.search.searchType = type;
   syncSearchState();
+  nextTick(() => focusSearchInput());
 }
 
-let unlistenKeydown: () => void;
-
-onMounted(async () => {
-  unlistenKeydown = await listen('global-keydown', handleKeyDown);
+onMounted(() => {
   syncSearchState();
+  nextTick(() => focusSearchInput());
 });
 
 onUnmounted(() => {
-  if (unlistenKeydown) {
-    unlistenKeydown();
-  }
   uiStore.removeInputHandler('ImageSearch');
 });
 
-function handleSearchHistoryClick(index: number, item: any) {
+function handleSearchHistoryClick(index: number) {
   isSearchFocused.value = true;
   libConfig.search.searchHistoryIndex = index;
-  // watcher will sync searchQuery and searchText
+  nextTick(() => focusSearchInput());
 }
 
 function clearHistory() {
@@ -335,9 +320,17 @@ function clearHistory() {
   showClearHistoryMsgbox.value = false;
 }
 
-function deleteHistoryItem() {
-  libConfig.search.searchHistory.splice(libConfig.search.searchHistoryIndex, 1);
-  libConfig.search.searchHistoryIndex = -1;
+function deleteHistoryItem(index: number) {
+  if (index < 0 || index >= libConfig.search.searchHistory.length) return;
+  const selectedIndex = libConfig.search.searchHistoryIndex;
+  libConfig.search.searchHistory.splice(index, 1);
+  if (selectedIndex === index) {
+    libConfig.search.searchText = '';
+    searchQuery.value = '';
+    libConfig.search.searchHistoryIndex = -1;
+  } else if (selectedIndex > index) {
+    libConfig.search.searchHistoryIndex = selectedIndex - 1;
+  }
 }
 
 function handleSearch() {
@@ -371,13 +364,6 @@ function handleSearch() {
 function handleEscKey() {
   searchInputRef.value?.blur();
 }
-
-function handleKeyDown(event: any) {
-  if (event.payload.key === 'Escape') {
-    console.log('handleKeyDown');
-  }
-};
-
 
 // similar image search history
 const historyItems = ref<Record<number, any>>({});
@@ -487,6 +473,7 @@ function showClearConfirmation() {
 defineExpose({
   clearHistory,
   showClearConfirmation,
+  focusSearchInput,
 });
 
 </script>

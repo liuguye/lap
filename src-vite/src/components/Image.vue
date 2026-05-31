@@ -247,6 +247,8 @@ const position = shallowRef([{ x: 0, y: 0 }, { x: 0, y: 0 }]); // Image position
 const scale = ref([1, 1]);                  // Image scale (zoom level)
 const minScale = ref(0.1);                    // Minimum zoom level
 const maxScale = ref(10);                   // Maximum zoom level
+const getActualSizeScale = () => 1 / (window.devicePixelRatio || 1);
+const getDisplayScale = (scaleValue: number) => scaleValue * (window.devicePixelRatio || 1);
 const imageRotate = ref([0, 0]);            // Image rotation
 const imageSize = ref([{ width: 0, height: 0 }, { width: 0, height: 0 }]);       // actual image size
 const imageSizeRotated = ref([{ width: 0, height: 0 }, { width: 0, height: 0 }]); // image size after rotation
@@ -1382,6 +1384,7 @@ watch(() => imageRotate.value[activeImage.value], (newValue) => {
 watch(() => scale.value[activeImage.value], (newValue) => {
   emit('scale', { 
     scale: newValue, 
+    displayScale: getDisplayScale(newValue),
     minScale: minScale.value, 
     maxScale: maxScale.value 
   });
@@ -1461,7 +1464,7 @@ const onImageReady = (nextIndex: number) => {
         };
 
         // Now, use the logic from zoomImage to transition from the "fit" state to the 100% state.
-        const newScale = 1;
+        const newScale = getActualSizeScale();
         const imageOffsetX = ((fitScale - newScale) * ((cursorX - initialPos.x) - imgSize.width / 2)) / fitScale;
         const imageOffsetY = ((fitScale - newScale) * ((cursorY - initialPos.y) - imgSize.height / 2)) / fitScale;
         
@@ -1571,7 +1574,7 @@ const zoomReset = (force: boolean = false) => {
   updatePosition();
   const mousePos = mousePosition.value;
   const containerPosVal = containerPos.value;
-  zoomImage(mousePos.x - containerPosVal.x, mousePos.y - containerPosVal.y, 1, force);
+  zoomImage(mousePos.x - containerPosVal.x, mousePos.y - containerPosVal.y, getActualSizeScale(), force);
 };
 
 // start dragging
@@ -1874,7 +1877,7 @@ const zoomOut = () => {
 
 const zoomActual = () => {
   const container = containerSize.value;
-  zoomImage(container.width / 2, container.height / 2, 1);
+  zoomImage(container.width / 2, container.height / 2, getActualSizeScale());
 };
 
 // Zoom image at cursor position

@@ -462,6 +462,8 @@
       "add": "Hinzufügen",
       "placeholder": "Bibliotheksname",
       "max_limit_reached": "Limit erreicht",
+      "summary": "{count} Bibliotheken · {size}",
+      "summary_loading": "{count} Bibliotheken · Größe wird berechnet...",
       "created_at_lower": "erstellt am",
       "calculating_stats": "Bibliotheksgroesse wird berechnet...",
       "library_file_path": "Dateipfad",
@@ -605,6 +607,7 @@
       "light": "Licht",
       "color": "Farbe",
       "compare": "Original anzeigen",
+      "tone": "Tonwert",
       "shadows": "Schatten",
       "midtones": "Mitteltöne",
       "highlights": "Glanzlichter",
@@ -799,7 +802,7 @@
       "pause": "Pause",
       "zoom_in": "Zoom +",
       "zoom_out": "Zoom -",
-      "zoom_fit": "Einpassen",
+      "zoom_fit": "An Fenster anpassen",
       "zoom_actual": "Tatsächliche Größe",
       "fullscreen": "Vollbild",
       "exit_fullscreen": "Vollbild beenden",
@@ -914,12 +917,12 @@
       "calendar_sort": "Kalender",
       "calendar_sort_hint": "Basierend auf dem Aufnahmedatum oder dem Änderungsdatum",
       "calendar_sort_options": [
-        "Aufnahmedatum (Aufsteigend)",
-        "Aufnahmedatum (Absteigend)",
-        "Erstelldatum (Aufsteigend)",
-        "Erstelldatum (Absteigend)",
-        "Änderungsdatum (Aufsteigend)",
-        "Änderungsdatum (Absteigend)"
+        "Aufnahmedatum (Aufst.)",
+        "Aufnahmedatum (Abst.)",
+        "Erstelldatum (Aufst.)",
+        "Erstelldatum (Abst.)",
+        "Änderungsdatum (Aufst.)",
+        "Änderungsdatum (Abst.)"
       ],
       "category_sort": "Kategorien",
       "category_sort_hint": "Tags, Orte, Personen und Kameras",
@@ -937,7 +940,8 @@
       "style_options": [
         "Kartenansicht",
         "Kachelansicht",
-        "Blocksatzansicht"
+        "Blocksatzansicht",
+        "Masonry-Ansicht"
       ],
       "size": "Größe",
       "scaling": "Skalierung",
@@ -958,11 +962,6 @@
         "Kamera",
         "Objektiv",
         "Einstellungen"
-      ],
-      "justify_mode": "Blocksatzmodus",
-      "justify_mode_options": [
-        "Gleiche Höhe",
-        "Gleiche Breite (Masonry)"
       ],
       "date_grouping": "Datumsgruppen anzeigen",
       "date_grouping_hint": "Gilt nur bei Sortierung nach Zeit",
@@ -1000,6 +999,7 @@
         "Keine"
       ],
       "auto_play_video": "Video Autoplay",
+      "loop_video": "Video wiederholen",
       "show_comment": "Kommentar zeigen",
       "show_comment_hint": "Kommentare im Betrachter anzeigen",
       "external_image_editor": "Bild öffnen mit",
@@ -1024,12 +1024,12 @@
     "image_search": {
       "title": "Intelligente Suche",
       "search_image": "Bildsuche",
-      "search_model": "Suchmodell auswählen",
+      "search_model": "Modell auswählen (Neustart erforderlich)",
       "default_model_hint": "Bildsuche nur auf Englisch",
       "multilingual_model_hint": "Suche in über 50 Sprachen",
       "search_model_options": [
         "Standard (Englisch)",
-        "Mehrsprachig (50+ Sprachen)"
+        "Mehrsprachig"
       ],
       "multilingual_model_download_title": "Mehrsprachiges Suchmodell herunterladen?",
       "multilingual_model_download_message": "Das mehrsprachige Bildsuchmodell ist nicht installiert. Laden Sie es herunter, um die Suche in über 50 Sprachen zu aktivieren.",
@@ -1046,6 +1046,55 @@
         "Mittel",
         "Niedrig"
       ]
+    },
+    "shortcuts": {
+      "title": "Tastenkürzel",
+      "sections": {
+        "global": "Allgemein",
+        "image_browsing": "Bildnavigation",
+        "viewing": "Anzeige",
+        "file_actions": "Dateiaktionen",
+        "metadata": "Metadaten"
+      },
+      "actions": {
+        "toggle_sidebar": "Seitenleiste umschalten",
+        "open_settings": "Einstellungen öffnen",
+        "font_increase": "Schrift vergrößern",
+        "font_decrease": "Schrift verkleinern",
+        "font_reset": "Schriftgröße zurücksetzen",
+        "search": "Suche",
+        "previous_image": "Vorheriges Bild",
+        "next_image": "Nächstes Bild",
+        "first_image": "Erstes Bild",
+        "last_image": "Letztes Bild",
+        "quick_preview": "Schnellvorschau",
+        "close_viewer": "Viewer schließen",
+        "search_similar": "Ähnliche Bilder finden",
+        "show_info": "Info anzeigen",
+        "zoom_in": "Vergrößern",
+        "zoom_out": "Verkleinern",
+        "zoom_fit": "Originalgröße / An Fenster anpassen",
+        "toggle_slideshow": "Diashow starten / pausieren",
+        "open_new_window": "In neuem Fenster öffnen",
+        "edit_image": "Bild bearbeiten",
+        "copy_file": "In Zwischenablage kopieren",
+        "rename_file": "Datei umbenennen",
+        "move_to": "In Ordner verschieben",
+        "move_to_trash": "In Papierkorb verschieben",
+        "delete_permanently": "Endgültig löschen",
+        "refresh_file_info": "Dateiinfo aktualisieren",
+        "print": "Drucken",
+        "toggle_favorite": "Favorit umschalten",
+        "clear_rating": "Bewertung löschen",
+        "rate_one": "1 Stern bewerten",
+        "rate_two": "2 Sterne bewerten",
+        "rate_three": "3 Sterne bewerten",
+        "rate_four": "4 Sterne bewerten",
+        "rate_five": "5 Sterne bewerten",
+        "edit_tags": "Tags bearbeiten",
+        "edit_comment": "Kommentar bearbeiten",
+        "rotate": "Ansicht drehen"
+      }
     },
     "database": {
       "title": "Speicher",

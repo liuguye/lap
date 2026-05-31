@@ -1,7 +1,38 @@
 <template>
   <div class="space-y-1.5">
     <div class="relative w-full aspect-4/1 px-0.5">
-      <svg viewBox="0 0 256 64" class="w-full h-full" preserveAspectRatio="none">
+      <div
+        v-if="hoverBin !== null"
+        class="pointer-events-none absolute right-1 top-1 z-10 rounded-md border border-base-content/5 bg-base-100/95 px-2 py-1 text-[9px] font-semibold leading-tight shadow-sm backdrop-blur-sm"
+      >
+        <div class="mb-1 text-[8px] uppercase tracking-[0.18em] text-base-content/30">
+          {{ $t('msgbox.image_editor.tone') }} {{ hoverBin }}
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-400/30">L</span>
+          <span class="w-10 text-right tabular-nums text-base-content/30">{{ formatLegendValue(hoveredValues.luma) }}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-red-500/30">R</span>
+          <span class="w-10 text-right tabular-nums text-base-content/30">{{ formatLegendValue(hoveredValues.red) }}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-green-500/30">G</span>
+          <span class="w-10 text-right tabular-nums text-base-content/30">{{ formatLegendValue(hoveredValues.green) }}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-blue-500/30">B</span>
+          <span class="w-10 text-right tabular-nums text-base-content/30">{{ formatLegendValue(hoveredValues.blue) }}</span>
+        </div>
+      </div>
+
+      <svg
+        viewBox="0 0 256 64"
+        class="h-full w-full"
+        preserveAspectRatio="none"
+        @mousemove="onHistogramMove"
+        @mouseleave="onHistogramLeave"
+      >
         <defs>
           <linearGradient :id="gradientId" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="rgba(148,163,184,0.62)" />
@@ -17,10 +48,20 @@
         <path :d="histogramPathR" fill="rgba(239,68,68,0.35)" style="mix-blend-mode: screen" />
         <path :d="histogramPathG" fill="rgba(34,197,94,0.35)" style="mix-blend-mode: screen" />
         <path :d="histogramPathB" fill="rgba(59,130,246,0.35)" style="mix-blend-mode: screen" />
+        <line
+          v-if="hoverBin !== null"
+          :x1="hoverX"
+          y1="0"
+          :x2="hoverX"
+          y2="64"
+          class="text-primary"
+          stroke="currentColor"
+          stroke-width="0.5"
+        />
       </svg>
     </div>
 
-    <div class="flex justify-between px-0.5 text-[8px] uppercase tracking-tighter font-black text-base-content/25">
+    <div class="flex justify-between px-0.5 text-[8px] uppercase tracking-tighter font-black text-base-content/30">
       <span>{{ $t('msgbox.image_editor.shadows') }}</span>
       <span>{{ $t('msgbox.image_editor.midtones') }}</span>
       <span>{{ $t('msgbox.image_editor.highlights') }}</span>
@@ -41,6 +82,22 @@ const props = defineProps({
     default: null,
   },
   applyAdjustments: {
+    type: Boolean,
+    default: false,
+  },
+  crop: {
+    type: Object as () => { x: number; y: number; width: number; height: number } | null,
+    default: null,
+  },
+  rotate: {
+    type: Number,
+    default: 0,
+  },
+  flipHorizontal: {
+    type: Boolean,
+    default: false,
+  },
+  flipVertical: {
     type: Boolean,
     default: false,
   },
@@ -71,6 +128,8 @@ const smoothedHistDataG = new Float32Array(HISTOGRAM_BIN_COUNT);
 const smoothedHistDataB = new Float32Array(HISTOGRAM_BIN_COUNT);
 const histogramVersion = ref(0);
 const gradientId = `histGradient-${Math.random().toString(36).slice(2)}`;
+const hoverBin = ref<number | null>(null);
+const hoverX = ref(0);
 let histogramAnimRaf: number | null = null;
 let histogramLoadId = 0;
 let histogramSourceImage: HTMLImageElement | null = null;
@@ -118,6 +177,8 @@ function clearHistogram() {
   smoothedHistDataR.fill(0);
   smoothedHistDataG.fill(0);
   smoothedHistDataB.fill(0);
+  hoverBin.value = null;
+  hoverX.value = 0;
   histogramVersion.value++;
 }
 
@@ -302,6 +363,70 @@ function applyHistogramAdjustments(data: Uint8ClampedArray, width: number, heigh
   }
 }
 
+function normalizeRotate(degrees: number) {
+  return ((Math.round(degrees / 90) * 90) % 360 + 360) % 360;
+}
+
+function getHistogramSampleRect(img: HTMLImageElement) {
+  const sourceWidth = img.naturalWidth || img.width;
+  const sourceHeight = img.naturalHeight || img.height;
+  const rotate = normalizeRotate(props.rotate);
+  const processedWidth = rotate === 90 || rotate === 270 ? sourceHeight : sourceWidth;
+  const processedHeight = rotate === 90 || rotate === 270 ? sourceWidth : sourceHeight;
+  const crop = props.crop;
+
+  if (!crop || crop.width <= 0 || crop.height <= 0) {
+    return { x: 0, y: 0, width: processedWidth, height: processedHeight, sourceWidth, sourceHeight, rotate };
+  }
+
+  const x = Math.max(0, Math.min(Math.round(crop.x), processedWidth - 1));
+  const y = Math.max(0, Math.min(Math.round(crop.y), processedHeight - 1));
+  const width = Math.max(1, Math.min(Math.round(crop.width), processedWidth - x));
+  const height = Math.max(1, Math.min(Math.round(crop.height), processedHeight - y));
+  return { x, y, width, height, sourceWidth, sourceHeight, rotate };
+}
+
+function applyHistogramSourceTransform(
+  ctx: CanvasRenderingContext2D,
+  sourceWidth: number,
+  sourceHeight: number,
+  rotate: number,
+) {
+  if (rotate === 90) {
+    ctx.translate(sourceHeight, 0);
+    ctx.rotate(Math.PI / 2);
+  } else if (rotate === 180) {
+    ctx.translate(sourceWidth, sourceHeight);
+    ctx.rotate(Math.PI);
+  } else if (rotate === 270) {
+    ctx.translate(0, sourceWidth);
+    ctx.rotate((Math.PI * 3) / 2);
+  }
+
+  if (props.flipHorizontal) {
+    ctx.translate(sourceWidth, 0);
+    ctx.scale(-1, 1);
+  }
+  if (props.flipVertical) {
+    ctx.translate(0, sourceHeight);
+    ctx.scale(1, -1);
+  }
+}
+
+function drawHistogramSample(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  size: number,
+) {
+  const sample = getHistogramSampleRect(img);
+  ctx.save();
+  ctx.scale(size / sample.width, size / sample.height);
+  ctx.translate(-sample.x, -sample.y);
+  applyHistogramSourceTransform(ctx, sample.sourceWidth, sample.sourceHeight, sample.rotate);
+  ctx.drawImage(img, 0, 0);
+  ctx.restore();
+}
+
 function buildHistogramData(img: HTMLImageElement) {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -313,7 +438,7 @@ function buildHistogramData(img: HTMLImageElement) {
   const size = 512;
   canvas.width = size;
   canvas.height = size;
-  ctx.drawImage(img, 0, 0, size, size);
+  drawHistogramSample(ctx, img, size);
 
   try {
     const imageData = ctx.getImageData(0, 0, size, size);
@@ -404,7 +529,7 @@ function computeAutoPresetValues(img: HTMLImageElement): AdjustmentValues {
   const size = 256;
   canvas.width = size;
   canvas.height = size;
-  ctx.drawImage(img, 0, 0, size, size);
+  drawHistogramSample(ctx, img, size);
 
   try {
     const data = ctx.getImageData(0, 0, size, size).data;
@@ -562,6 +687,21 @@ function buildPathFromSmoothed(smoothed: Float32Array) {
   return path;
 }
 
+function getHistogramValueAt(display: Float32Array, bin: number) {
+  const index = Math.max(0, Math.min(HISTOGRAM_BIN_COUNT - 1, bin));
+  return display[index] || 0;
+}
+
+const hoveredValues = computed(() => {
+  const bin = hoverBin.value ?? 0;
+  return {
+    luma: getHistogramValueAt(displayedHistData, bin),
+    red: getHistogramValueAt(displayedHistDataR, bin),
+    green: getHistogramValueAt(displayedHistDataG, bin),
+    blue: getHistogramValueAt(displayedHistDataB, bin),
+  };
+});
+
 const histogramPath = computed(() => {
   histogramVersion.value;
   return buildPathFromSmoothed(smoothedHistData);
@@ -617,7 +757,33 @@ function startHistogramAnimation() {
   histogramAnimRaf = requestAnimationFrame(step);
 }
 
+function onHistogramMove(event: MouseEvent) {
+  const target = event.currentTarget as SVGElement | null;
+  if (!target) return;
+  const rect = target.getBoundingClientRect();
+  if (rect.width <= 0) return;
+  const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+  hoverX.value = ratio * 256;
+  hoverBin.value = Math.max(0, Math.min(HISTOGRAM_BIN_COUNT - 1, Math.round(ratio * (HISTOGRAM_BIN_COUNT - 1))));
+}
+
+function onHistogramLeave() {
+  hoverBin.value = null;
+}
+
+function formatLegendValue(value: number) {
+  return `${Math.round((value / HISTOGRAM_HEIGHT) * 100)}%`;
+}
+
 watch(() => props.source, updateHistogram, { immediate: true });
+watch(
+  () => [props.crop, props.rotate, props.flipHorizontal, props.flipVertical],
+  () => {
+    autoPresetValues = null;
+    scheduleHistogramRecompute();
+  },
+  { deep: true }
+);
 watch(
   () => props.adjustments,
   () => {

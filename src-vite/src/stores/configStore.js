@@ -38,8 +38,7 @@ export const useConfigStore = defineStore('configStore', {
     },
 
     search: {
-      searchType: 0,           // 0: ai search, 1: similar image, 2: filename search
-      maxSearchHistory: 20,    // max search history
+      maxSearchHistory: 20,     // max search history
       fileType: 0,              // filter file type bitmask (0: all, 1: image, 2: video, 4: raw)
       sortType: 0,              // sort type (default to time)
       sortOrder: 0,             // sort order(0: ascending, 1: descending)
@@ -84,7 +83,7 @@ export const useConfigStore = defineStore('configStore', {
     libraryChangedVersion: 0,
 
     settings: {
-      tabIndex: 0,               // settings tab index (0: general, 1: view, 2: library, 3: image search, 4: about)
+      tabIndex: 0,               // settings tab index (0: general, 1: view, 2: library, 3: image search, 4: shortcuts, 5: about)
 
       // general settings
       language: 'en',             // default language
@@ -103,17 +102,15 @@ export const useConfigStore = defineStore('configStore', {
       categorySort: 0,            // category_sort_options: 0=name asc, 1=name desc, 2=count asc, 3=count desc
       showSubfolderFiles: false,  // show subfolder files (in album folder view)
       
-
       // grid view settings
       thumbnailSize: 512,         // thumbnail image size (small: 128, medium: 256, large: 512, extra large: 1024)
       grid: {
         size: 160,               // grid size, range 120-360
-        style: 0,                // 0: card view, 1: tile view, 2: justified view
+        style: 0,                // 0: card view, 1: tile view, 2: justified view, 3: masonry view
         showFilmStrip: false,    // show filmstrip view
         scaling: 1,              // 0: Fit Entire Image, 1: Crop to Fill, 2: Stretch to Fill
         labelPrimary: 1,         // card view: primary label (1: Name)
         labelSecondary: 3,       // card view: secondary label (3: Dimension)
-        justifyMode: 0,          // justified view mode: 0: equal height, 1: equal width (masonry)
         previewPosition: 0,      // filmstrip view: preview position (0: top, 1: bottom, 2: left, 3: right)
         dateGrouping: 0,         // show date groups: 0: none, 1: day, 2: month
       },
@@ -125,6 +122,7 @@ export const useConfigStore = defineStore('configStore', {
       navigatorViewMode: 0,      // 0: Auto, 1: Always hide, 2: Always show
       navigatorViewSize: 240,    // navigator view size (160, 240, 320, 400)
       autoPlayVideo: true,       // auto play video
+      loopVideo: false,          // loop video (only effective when autoPlayVideo is off)
       // showComment: false,        // show comment
       externalImageAppPath: '',    // external image app path
       externalImageAppName: '',    // external image app display name
@@ -237,9 +235,6 @@ export const useConfigStore = defineStore('configStore', {
     },
     setGridLabelSecondary(gridLabelSecondary) {
       this.settings.grid.labelSecondary = gridLabelSecondary;
-    },
-    setJustifyMode(justifyMode) {
-      this.settings.grid.justifyMode = justifyMode;
     },
     setGridDateGrouping(dateGrouping) {
       this.settings.grid.dateGrouping = dateGrouping;

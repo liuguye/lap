@@ -22,11 +22,11 @@
       <img
         :src="file.thumbnail"
         :class="{
-          'group-hover:scale-115': config.settings.grid.style === 1 || config.settings.grid.style === 2,
-          'scale-115': (config.settings.grid.style === 1 || config.settings.grid.style === 2) && isSelected,
-          'object-contain': config.settings.grid.style !== 2 && config.settings.grid.scaling === 0,
-          'object-cover': config.settings.grid.style === 2 || config.settings.grid.scaling === 1,
-          'object-fill': config.settings.grid.style !== 2 && config.settings.grid.scaling === 2,
+          'group-hover:scale-115': shouldScaleThumbnail,
+          'scale-115': shouldScaleThumbnail && isSelected,
+          'object-contain': !isGeometryGridStyle && config.settings.grid.scaling === 0,
+          'object-cover': isGeometryGridStyle || config.settings.grid.scaling === 1,
+          'object-fill': !isGeometryGridStyle && config.settings.grid.scaling === 2,
           'transition-all': !isTransitionDisabled && normalizedRotate === 0,
         }"
         :style="imgStyle"
@@ -37,10 +37,10 @@
         ref="previewVideoRef"
         class="pointer-events-none absolute inset-0 transition-opacity duration-100"
         :class="{
-          'object-contain': config.settings.grid.style !== 2 && config.settings.grid.scaling === 0,
-          'object-cover': config.settings.grid.style === 2 || config.settings.grid.scaling === 1,
-          'object-fill': config.settings.grid.style !== 2 && config.settings.grid.scaling === 2,
-          'scale-115': config.settings.grid.style === 1 || config.settings.grid.style === 2,
+          'object-contain': !isGeometryGridStyle && config.settings.grid.scaling === 0,
+          'object-cover': isGeometryGridStyle || config.settings.grid.scaling === 1,
+          'object-fill': !isGeometryGridStyle && config.settings.grid.scaling === 2,
+          'scale-115': shouldScaleThumbnail,
           'opacity-100': isVideoPreviewReady,
           'opacity-0': !isVideoPreviewReady,
         }"
@@ -211,6 +211,8 @@ let previewTimer: ReturnType<typeof setTimeout> | null = null;
 const showVideoPreview = ref(false);
 const isVideoPreviewReady = ref(false);
 const isVideoFile = computed(() => props.file?.file_type === 2);
+const isGeometryGridStyle = computed(() => config.settings.grid.style === 2 || config.settings.grid.style === 3);
+const shouldScaleThumbnail = computed(() => config.settings.grid.style === 1 || isGeometryGridStyle.value);
 
 // Robust ResizeObserver setup using watch to handle v-if
 watch(containerRef, (el) => {

@@ -5,6 +5,7 @@
     @mousedown.capture="activateContentPane"
     @mouseenter="isContentHovered = true"
     @mouseleave="isContentHovered = false"
+    @wheel.capture="handleContentWheel"
     @keydown="handleLocalKeyDown"
     @dragstart.capture="markContentInternalDrag"
     @dragend.capture="clearContentInternalDrag"
@@ -113,11 +114,10 @@
 
           <!-- grid styles cycle -->
           <TButton
-            :icon="[IconCard, IconTile, IconJustified][config.settings.grid.style]"
-            :iconStyle="{ 
-              transform: `rotate(${config.settings.grid.style === 2 && config.settings.grid.justifyMode === 1 ? 90 : 0}deg)`, 
-              transition: 'transform 0.3s ease-in-out' 
-            }" 
+            :icon="[IconCard, IconTile, IconJustified, IconJustified][config.settings.grid.style]"
+            :iconStyle="{
+              transform: `rotate(${config.settings.grid.style === 3 ? 90 : 0}deg)`,
+            }"
             :tooltip="localeMsg.settings.view.style_options[config.settings.grid.style]"
             @click="cycleGridStyle"
           />
@@ -140,6 +140,7 @@
             :icon="IconSelection"
             :tooltip="$t('toolbar.filter.select_mode')"
             :selected="selectMode"
+            :disabled="isScanStreamingMode"
             @click="handleSelectMode(!selectMode)"
           />
 
@@ -148,6 +149,7 @@
             :icon="IconSimilar"
             :tooltip="$t('toolbar.tooltip.open_dedup')"
             :selected="isDedupPanelOpen"
+            :disabled="isScanStreamingMode"
             @click="toggleDedupPanel"
           />
 
@@ -436,7 +438,6 @@
             @quick-edit-tag="clickTag"
             @quick-edit-comment="openCommentEditor"
             @navigate-folder="handleInfoNavigateFolder"
-            @refresh-file-info="updateFile(fileList[selectedItemIndex], true)"
           />
         </div>
       </transition>
@@ -454,7 +455,7 @@
       :selected-size="selectedSize"
       :show-film-strip="config.settings.grid.showFilmStrip"
       :show-quick-view="showQuickView"
-      :image-scale="imageScale"
+      :image-scale="imageDisplayScale"
       :scan-text="statusBarScanText"
       :show-update-icon="statusBarShowUpdateIcon"
       :is-update-animating="statusBarIsUpdateAnimating"
@@ -799,6 +800,7 @@ const totalFileSize = ref(0);     // total files' size
 const selectedItemIndex = ref(-1);
 let pendingInitialSelectedIndex = -1;
 let hasRestoredInitialSelection = false;
+let pendingSelectedFileIds: Set<number> | null = null;
 
 // mutil select mode
 const selectMode = ref(false);
@@ -867,6 +869,7 @@ function closeQuickPreview() {
 
 // toolbar state for MediaViewer
 const imageScale = ref(1);
+const imageDisplayScale = ref(1);
 const imageMinScale = ref(0);
 const imageMaxScale = ref(10);
 const isSlideShow = ref(false);
@@ -881,6 +884,7 @@ let currentContentRequestId = 0;
 
 const onScale = (event: any) => {
   imageScale.value = event.scale;
+  imageDisplayScale.value = event.displayScale ?? event.scale;
   imageMinScale.value = event.minScale;
   imageMaxScale.value = event.maxScale;
 };
@@ -1063,10 +1067,14 @@ const containerWidth = ref(0);    // container width
 const layoutContentHeight = ref(0); // reported content height from GridView
 const layoutVersion = ref(0);     // version to force layout update
 let layoutRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+const isGeometryGridStyle = computed(() => config.settings.grid.style === 2 || config.settings.grid.style === 3);
+const usesGeometryNavigation = computed(() =>
+  config.settings.grid.style === 2 ||
+  (!config.settings.grid.showFilmStrip && config.settings.grid.style === 3)
+);
 
 function scheduleLayoutRefresh() {
-  // Only justified layout depends heavily on per-item geometry changes.
-  if (config.settings.grid.style !== 2) return;
+  if (!isGeometryGridStyle.value) return;
   if (layoutRefreshTimer) return;
   layoutRefreshTimer = setTimeout(() => {
     layoutVersion.value++;
@@ -1080,8 +1088,8 @@ const itemWidth = computed(() => {
     return config.settings.grid.size + 20; // size + padding/border/gap(20)
   } else if (config.settings.grid.style === 1) {
     return config.settings.grid.size;
-  } else if (config.settings.grid.style === 2) {
-    return config.settings.grid.size; // Approximation for Justified View
+  } else if (isGeometryGridStyle.value) {
+    return config.settings.grid.size; // Approximation for geometry layouts
   }
   return 0;
 });
@@ -1094,7 +1102,7 @@ const itemSize = computed(() => {
     return config.settings.grid.size + 20 + labelHeight; // size + padding/border/gap(20) + labels
   } else if (config.settings.grid.style === 1) {
     return itemWidth.value + gap / 2;
-  } else if (config.settings.grid.style === 2) {
+  } else if (isGeometryGridStyle.value) {
     return config.settings.grid.size;
   }
   return 0;
@@ -1188,8 +1196,6 @@ const hasLoadedInitialResult = ref(false); // avoid showing "No files found" bef
 const contentReady = ref(false);  // true after current view's content has loaded (empty or not), reset on navigation
 const dedupSourceVersion = ref(0);
 
-const searchBoxRef = ref<any>(null);
-
 // Store current query params for virtual scrolling
 const currentQueryParams = ref({
   searchFileType: 0,
@@ -1251,6 +1257,31 @@ const currentImageSearchParams = ref({
   limit: 0,
 });
 
+function showEmptyContent(requestId: number) {
+  if (requestId !== currentContentRequestId) return;
+  fileList.value = [];
+  totalFileCount.value = 0;
+  totalFileSize.value = 0;
+  timelineData.value = [];
+  lastVisibleRange = { start: -1, end: -1 };
+  visibleRangeSeqId++;
+  markDedupSourceUpdated(requestId);
+  openImageViewer(0, false, true);
+  isLoading.value = false;
+  hasLoadedInitialResult.value = true;
+  contentReady.value = true;
+}
+
+function showLoadingContent(requestId: number) {
+  if (requestId !== currentContentRequestId) return;
+  fileList.value = [];
+  totalFileCount.value = 0;
+  totalFileSize.value = 0;
+  timelineData.value = [];
+  isLoading.value = true;
+  contentReady.value = false;
+}
+
 // Similar Search Mode State
 const tempViewMode = ref<'none' | 'similar' | 'album' | 'person'>('none');
 const dedupQueryParams = computed(() => {
@@ -1305,6 +1336,32 @@ let unlistenFaceIndexProgress: (() => void) | null = null;
 let unlistenLibraryTotalRefreshed: (() => void) | null = null;
 
 let resizeObserver: ResizeObserver | null = null;
+let contentUpdateTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleContentRefresh(task: () => void) {
+  if (contentUpdateTimer) {
+    clearTimeout(contentUpdateTimer);
+  }
+  contentUpdateTimer = setTimeout(() => {
+    contentUpdateTimer = null;
+    task();
+  }, 0);
+}
+
+function resetContentViewportState() {
+  scrollPosition.value = 0;
+  selectedItemIndex.value = 0;
+  if (gridViewRef.value) {
+    gridViewRef.value.scrollToPosition(0);
+  }
+}
+
+function refreshContentFromSelectionChange() {
+  resetContentViewportState();
+  updateContent();
+  // Reset ImageViewer context if open (without focusing/showing it)
+  openImageViewer(selectedItemIndex.value, false, true);
+}
 
 onMounted(() => {
   if (gridScrollContainerRef.value) {
@@ -1327,6 +1384,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   stopSlideShow();
+  if (contentUpdateTimer) {
+    clearTimeout(contentUpdateTimer);
+    contentUpdateTimer = null;
+  }
   window.removeEventListener('resize', handleWindowResize);
   if (resizeObserver) {
     resizeObserver.disconnect();
@@ -1695,8 +1756,8 @@ const keyActions = {
     if (getActivePreviewMode() !== 'none') return;
     checkUnsavedChanges(() => {
       if (gridViewRef.value) {
-        if (config.settings.grid.style === 2) {
-          // Use geometry-aware navigation for Justified View
+        if (usesGeometryNavigation.value) {
+          // Use geometry-aware navigation for variable-sized layouts.
           const nextIndex = gridViewRef.value.getNextItemIndex(selectedItemIndex.value, 'down');
           selectedItemIndex.value = nextIndex !== -1 ? nextIndex : selectedItemIndex.value;
         } else {
@@ -1709,8 +1770,8 @@ const keyActions = {
     if (getActivePreviewMode() !== 'none') return;
     checkUnsavedChanges(() => {
       if (gridViewRef.value) {
-        if (config.settings.grid.style === 2) {
-          // Use geometry-aware navigation for Justified View
+        if (usesGeometryNavigation.value) {
+          // Use geometry-aware navigation for variable-sized layouts.
           const nextIndex = gridViewRef.value.getNextItemIndex(selectedItemIndex.value, 'up');
           selectedItemIndex.value = nextIndex !== -1 ? nextIndex : selectedItemIndex.value;
         } else {
@@ -1729,7 +1790,6 @@ const keyActions = {
       selectedItemIndex.value = fileList.value.length - 1;
     });
   },
-  '/': () => searchBoxRef.value.focusInput(),
 };
 
 // Local keydown handler for navigation (prevents default browser behavior)
@@ -1871,6 +1931,22 @@ function handleLocalKeyDown(event: KeyboardEvent) {
     return;
   }
 
+  if (matchesShortcut('view.first', event, shortcutPlatform)) {
+    event.preventDefault();
+    checkUnsavedChanges(() => {
+      selectedItemIndex.value = 0;
+    });
+    return;
+  }
+
+  if (matchesShortcut('view.last', event, shortcutPlatform)) {
+    event.preventDefault();
+    checkUnsavedChanges(() => {
+      selectedItemIndex.value = fileList.value.length - 1;
+    });
+    return;
+  }
+
   const handledKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter', 'Space', ' '];
 
   if (matchesShortcut('view.quickPreview', event, shortcutPlatform) && event.key === 'Enter') {
@@ -1912,6 +1988,19 @@ function isContentInteractionActive() {
 
 function activateContentPane() {
   uiStore.setActivePane('content');
+}
+
+function handleContentWheel(event: WheelEvent) {
+  if (!event.ctrlKey) return;
+  if (getActivePreviewMode() !== 'none') return;
+  if (!isContentInteractionActive()) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  const currentSize = Number(config.settings.grid.size || 160);
+  const delta = event.deltaY < 0 ? 10 : -10;
+  config.settings.grid.size = Math.max(120, Math.min(360, currentSize + delta));
 }
 
 function isTextInputFocused() {
@@ -1957,6 +2046,10 @@ const handleKeyDown = (e: any) => {
     showMoveTo.value = true;
   } else if (matchesShortcut('file.trash', event, shortcutPlatform)) {
     openTrashMsgbox(0, '', [], !!shiftKey);
+  } else if (matchesShortcut('view.first', event, shortcutPlatform)) {
+    (keyActions as any).Home();
+  } else if (matchesShortcut('view.last', event, shortcutPlatform)) {
+    (keyActions as any).End();
   } else if ((keyActions as any)[key]) {
     (keyActions as any)[key]();
   }
@@ -2037,6 +2130,14 @@ const isScanStreamingMode = computed(() =>
   config.main.sidebarIndex === 0 &&
   Boolean(libConfig.album.selected)
 );
+
+// When scanning starts, close panels and multi-select which rely on a stable file list.
+watch(isScanStreamingMode, (streaming) => {
+  if (streaming) {
+    config.rightPanel.show = false;
+    if (selectMode.value) selectMode.value = false;
+  }
+});
 
 const thumbProgressPercent = computed(() => {
   if (fileList.value.length <= 0) return 0;
@@ -2412,7 +2513,12 @@ onMounted( async() => {
 
   unlistenLibraryTotalRefreshed = await listen('library-total-refreshed', (event: any) => {
     if (event?.payload?.source === 'content') return;
-    if (config.main.sidebarIndex === 0) updateContent(true);
+    if (isScanStreamingMode.value) return;
+    if (config.main.sidebarIndex === 0) {
+      pendingInitialSelectedIndex = selectedItemIndex.value;
+      hasRestoredInitialSelection = false;
+      updateContent(true);
+    }
   });
 
   // Drag-drop file import. Tauri native drag/drop is disabled so internal
@@ -2533,10 +2639,23 @@ onMounted( async() => {
   unlistenImageEditor = await listen('message-from-image-editor', async (event: any) => {
     const { type, saveAsNew, filePath } = event.payload as any;
     if (type === 'success') {
-      if (!saveAsNew && filePath) {
-        uiStore.updateFileVersion(filePath);
+      try {
+        const editorWindow = await WebviewWindow.getByLabel('imageeditor');
+        if (editorWindow) {
+          try {
+            await editorWindow.destroy();
+          } catch (error) {
+            console.error('Failed to destroy ImageEditor window from parent:', error);
+          }
+        }
+
+        if (!saveAsNew && filePath) {
+          uiStore.updateFileVersion(filePath);
+        }
+        await onFileSaved(true, { saveAsNew, filePath });
+      } catch (error) {
+        console.error('Failed handling ImageEditor save success:', error);
       }
-      await onFileSaved(true, { saveAsNew, filePath });
     } else if (type === 'failed') {
       await onFileSaved(false);
     }
@@ -2608,6 +2727,7 @@ onMounted( async() => {
       // Avoid duplicated refresh: this explicit refresh replaces the
       // watch(isIndexing) idle refresh for this finish cycle.
       suppressNextIndexingIdleRefresh.value = true;
+      selectedItemIndex.value = 0;
       setTimeout(() => {
         updateContent(true);
       }, 200);
@@ -2793,23 +2913,12 @@ watch(
     libConfig.search.searchType
   ],
   () => {
-    setTimeout(() => {
+    scheduleContentRefresh(() => {
       // Only update content if we are currently in the Image Search view
       if (config.main.sidebarIndex === 2) {
-        scrollPosition.value = 0;   // reset file scroll position
-        selectedItemIndex.value = 0; // reset selected item index to 0
-        
-        // Also reset the GridView scroll position
-        if (gridViewRef.value) {
-          gridViewRef.value.scrollToPosition(0);
-        }
-        
-        updateContent();
-  
-        // Reset ImageViewer context if open (without focusing/showing it)
-        openImageViewer(selectedItemIndex.value, false, true);
+        refreshContentFromSelectionChange();
       }
-    }, 0);
+    });
   }
 );
 
@@ -2840,23 +2949,12 @@ watch(
     // Skip other temp modes to prevent race conditions
     if (tempViewMode.value !== 'none') return;
     
-    setTimeout(() => {
+    scheduleContentRefresh(() => {
       // Double check in case tempViewMode changed during setTimeout
       if (tempViewMode.value !== 'none') return;
-      
-      scrollPosition.value = 0;   // reset file scroll position
-      selectedItemIndex.value = 0; // reset selected item index to 0
-      
-      // Also reset the GridView scroll position
-      if (gridViewRef.value) {
-        gridViewRef.value.scrollToPosition(0);
-      }
-      
-      updateContent();
-  
-      // Reset ImageViewer context if open (without focusing/showing it)
-      openImageViewer(selectedItemIndex.value, false, true);
-    }, 0);
+
+      refreshContentFromSelectionChange();
+    });
   }, 
   { immediate: true }
 );
@@ -2917,19 +3015,21 @@ function toggleFilmstripView() {
 
 function cycleGridStyle() {
   showQuickView.value = false;
-  // Cycle between 0, 1, 2 (Card, Tile, Justified)
-  config.settings.grid.style = (config.settings.grid.style + 1) % 3;
+  // Cycle between card, tile, justified, and masonry.
+  config.settings.grid.style = (config.settings.grid.style + 1) % 4;
 }
 
 // Track pending requests to avoid duplicates
 const pendingRequests = new Set();
 
 async function fetchDataRange(start: number, end: number, reverse = false) {
+  const requestId = currentContentRequestId;
+
   // Clamp range
   start = Math.max(0, start);
   end = Math.min(totalFileCount.value, end);
   
-  if (start >= end) return;
+  if (start >= end || requestId !== currentContentRequestId) return;
 
   // Fetch in chunks
   const chunkSize = selectionChunkSize.value;
@@ -2953,7 +3053,7 @@ async function fetchDataRange(start: number, end: number, reverse = false) {
     }
 
     if (chunkNeedsLoad) {
-      const key = `${chunkStart}-${chunkSize}`;
+      const key = `${requestId}:${chunkStart}-${chunkSize}`;
       if (pendingRequests.has(key)) {
         continue;
       }
@@ -2962,10 +3062,12 @@ async function fetchDataRange(start: number, end: number, reverse = false) {
       
       const promise = getQueryFiles(currentQueryParams.value, chunkStart, chunkSize)
         .then(async (newFiles) => {
+          if (requestId !== currentContentRequestId) return;
           if (newFiles) {
             // Update fileList and collect reactive references
             const filesToFetch = [];
             for (let j = 0; j < newFiles.length; j++) {
+              if (requestId !== currentContentRequestId) return;
               if (chunkStart + j >= fileList.value.length) continue;
 
               const existingItem = fileList.value[chunkStart + j];
@@ -2975,7 +3077,8 @@ async function fetchDataRange(start: number, end: number, reverse = false) {
               }
 
               // Preserve client-side state when upgrading placeholder -> real item.
-              const isSelected = existingItem ? existingItem.isSelected : false;
+              const isSelected = existingItem?.isSelected
+                || (pendingSelectedFileIds?.has(newFiles[j].id) ?? false);
               const rotate = existingItem ? (existingItem.rotate || 0) : 0;
               const thumbnail = existingItem?.thumbnail;
 
@@ -3164,6 +3267,17 @@ async function getFileList(
         }
       });
       
+      // Preserve selection state before replacing file list
+      if (selectMode.value) {
+        const ids = new Set<number>();
+        for (const f of fileList.value) {
+          if (f.isSelected && typeof f.id === 'number') ids.add(f.id);
+        }
+        pendingSelectedFileIds = ids.size > 0 ? ids : null;
+      } else {
+        pendingSelectedFileIds = null;
+      }
+
       // Initialize fileList with placeholders
       fileList.value = Array.from({ length: totalFileCount.value }).map((_, i) => ({
         id: 'ph-' + i,
@@ -3226,52 +3340,51 @@ async function getImageSearchFileList(
     if (requestId !== currentContentRequestId) {
       return;
     }
-    
-    searchSimilarImages(currentImageSearchParams.value).then(result => {
-      if (requestId !== currentContentRequestId) return;
 
-      if (result) {
-        fileList.value = preserveLoadedThumbnails(result);
-        totalFileCount.value = fileList.value.length;
-        totalFileSize.value = fileList.value.reduce((total, file) => total + file.size, 0);
-        markDedupSourceUpdated(requestId);
-        restoreInitialSelectionIfNeeded();
-        openImageViewer(0, false, true);
+    const result = await searchSimilarImages(currentImageSearchParams.value);
+    if (requestId !== currentContentRequestId) return;
 
-        // Reset visible range tracking when changing views
-        lastVisibleRange = { start: -1, end: -1 };
-        visibleRangeSeqId++;
+    if (result) {
+      fileList.value = preserveLoadedThumbnails(result);
+      totalFileCount.value = fileList.value.length;
+      totalFileSize.value = fileList.value.reduce((total, file) => total + file.size, 0);
+      markDedupSourceUpdated(requestId);
+      restoreInitialSelectionIfNeeded();
+      openImageViewer(0, false, true);
 
-        // Update search history with the first result's file_id
-        if (updateHistory && searchText && result.length > 0) {
-          const history = libConfig.search.searchHistory as any[];
-          const index = history.findIndex((item: any) => {
-             const text = typeof item === 'string' ? item : item.text;
-             return text === searchText;
-          });
+      // Reset visible range tracking when changing views
+      lastVisibleRange = { start: -1, end: -1 };
+      visibleRangeSeqId++;
 
-          if (index !== -1) {
-             const item = history[index];
-             const firstId = result[0].id;
+      // Update search history with the first result's file_id
+      if (updateHistory && searchText && result.length > 0) {
+        const history = libConfig.search.searchHistory as any[];
+        const index = history.findIndex((item: any) => {
+            const text = typeof item === 'string' ? item : item.text;
+            return text === searchText;
+        });
 
-             // Always update the history item's fileId to the latest first result
-             if (typeof item === 'string') {
-               history[index] = { text: item, fileId: firstId };
-             } else {
-               item.fileId = firstId;
-             }
-          }
+        if (index !== -1) {
+            const item = history[index];
+            const firstId = result[0].id;
+
+            // Always update the history item's fileId to the latest first result
+            if (typeof item === 'string') {
+              history[index] = { text: item, fileId: firstId };
+            } else {
+              item.fileId = firstId;
+            }
         }
-
-        // Fetch thumbnails for the search results
-        getFileListThumb(fileList.value);
-      } else {
-        fileList.value = [];
-        totalFileCount.value = 0;
-        totalFileSize.value = 0;
-        markDedupSourceUpdated(requestId);
       }
-    });
+
+      // Fetch thumbnails for the search results
+      getFileListThumb(fileList.value);
+    } else {
+      fileList.value = [];
+      totalFileCount.value = 0;
+      totalFileSize.value = 0;
+      markDedupSourceUpdated(requestId);
+    }
   } catch (err) {
     console.error('getImageSearchFileList error:', err);
     if (requestId === currentContentRequestId) {
@@ -3354,26 +3467,51 @@ async function updateContent(force = false) {
             });
             contentTitle.value = formatFolderBreadcrumb(folderPath, album.path);
             const folderId = Number(libConfig.album.folderId || 0);
+            const folderQueryParams = () => config.settings.showSubfolderFiles
+              ? { searchAllSubfolders: folderPath }
+              : { searchFolder: folderPath };
             if (folderId > 0 && folderPath) {
               // Debounce: if a sync is already in-flight for this folder, reuse it.
               const existing = pendingFolderSyncs.get(folderId);
               const syncPromise = existing ?? syncAlbumFolderMtimes(album.id, folderId, folderPath);
               if (!existing) pendingFolderSyncs.set(folderId, syncPromise);
-              const syncResult = await syncPromise;
-              pendingFolderSyncs.delete(folderId);
-              if (requestId !== currentContentRequestId) return;
-              if (syncResult?.current_folder_synced) {
-                console.log(
-                  `folder sync: ${syncResult.new_file_count} new, ${syncResult.updated_file_count} updated, ${syncResult.deleted_file_count} deleted, ${syncResult.rename_count || 0} renamed`
-                );
-              }
+              syncPromise.then(syncResult => {
+                if (pendingFolderSyncs.get(folderId) === syncPromise) {
+                  pendingFolderSyncs.delete(folderId);
+                }
+                if (
+                  requestId !== currentContentRequestId ||
+                  config.main.sidebarIndex !== 0 ||
+                  libConfig.album.folderId !== folderId ||
+                  libConfig.album.folderPath !== folderPath
+                ) return;
+                if (syncResult?.current_folder_synced) {
+                  console.log(
+                    `folder sync: ${syncResult.new_file_count} new, ${syncResult.updated_file_count} updated, ${syncResult.deleted_file_count} deleted, ${syncResult.rename_count || 0} renamed`
+                  );
+                  const visibleRange = { ...lastVisibleRange };
+                  const refreshRequestId = ++currentContentRequestId;
+                  if (pendingInitialSelectedIndex < 0) {
+                    pendingInitialSelectedIndex = selectedItemIndex.value;
+                    hasRestoredInitialSelection = false;
+                  }
+                  getFileList(folderQueryParams(), refreshRequestId).then(() => {
+                    if (
+                      refreshRequestId !== currentContentRequestId ||
+                      visibleRange.start < 0 ||
+                      visibleRange.end <= visibleRange.start
+                    ) return;
+                    fetchDataRange(visibleRange.start, visibleRange.end + 1);
+                  });
+                }
+              }).catch(error => {
+                if (pendingFolderSyncs.get(folderId) === syncPromise) {
+                  pendingFolderSyncs.delete(folderId);
+                }
+                console.error('folder sync failed:', error);
+              });
             }
-            getFileList(
-              config.settings.showSubfolderFiles
-                ? { searchAllSubfolders: folderPath }
-                : { searchFolder: folderPath },
-              requestId
-            );
+            getFileList(folderQueryParams(), requestId);
           }
         } else {
           contentTitle.value = "";
@@ -3423,6 +3561,7 @@ async function updateContent(force = false) {
         getImageSearchFileList(libConfig.search.searchText, 0, requestId);
       } else {
         contentTitle.value = localeMsg.value.search.search_images;
+        showEmptyContent(requestId);
       }
     } else if (libConfig.search.searchType === 1) { // similar
       const index = libConfig.search.similarImageHistoryIndex;
@@ -3432,6 +3571,7 @@ async function updateContent(force = false) {
         getImageSearchFileList("", libConfig.search.similarImageHistory[index], requestId);
       } else {
         contentTitle.value = localeMsg.value.search.similar_images;
+        showEmptyContent(requestId);
       }
     } else {   // filename search
       if (libConfig.search.fileName) {
@@ -3439,12 +3579,14 @@ async function updateContent(force = false) {
         getFileList({ searchFileName: libConfig.search.fileName, sortType: 3, sortOrder: 0 }, requestId); // sort by name
       } else {
         contentTitle.value = localeMsg.value.search.filename_search;
+        showEmptyContent(requestId);
       }
     }
   }
   else if(newIndex === 3) {   // calendar
     if(libConfig.calendar.year === null) {
       contentTitle.value = "";
+      showEmptyContent(requestId);
     } else if (libConfig.calendar.year === -1) {  // on this day
       contentTitle.value = localeMsg.value.calendar.on_this_day;
       getFileList({ startDate: -1, endDate: -1 }, requestId);
@@ -3466,10 +3608,12 @@ async function updateContent(force = false) {
       const smartId = libConfig.tag.smartId;
       if (!smartId) {
         contentTitle.value = "";
+        showEmptyContent(requestId);
       } else {
         const smartTag = getSmartTagById(smartId);
         if (!smartTag) {
           contentTitle.value = "";
+          showEmptyContent(requestId);
           return;
         }
         const smartTagLabel = localeMsg.value.tag.smart_items?.[smartTag.id] || smartTag.id;
@@ -3479,6 +3623,7 @@ async function updateContent(force = false) {
     } else {
       if (libConfig.tag.id === null) {
         contentTitle.value = "";
+        showEmptyContent(requestId);
       } else {
         getTagName(libConfig.tag.id).then(tagName => {
           if (requestId !== currentContentRequestId) return;
@@ -3487,6 +3632,7 @@ async function updateContent(force = false) {
             getFileList({ tagId: libConfig.tag.id || 0 }, requestId);
           } else {
             contentTitle.value = "";
+            showEmptyContent(requestId);
           }
         });
       }
@@ -3495,6 +3641,7 @@ async function updateContent(force = false) {
   else if(newIndex === 5) {   // person
     if (libConfig.person.id === null) {
       contentTitle.value = "";
+      showEmptyContent(requestId);
     } else {
       contentTitle.value = libConfig.person.name || `${localeMsg.value.sidebar.people}`;
       getFileList({ personId: libConfig.person.id }, requestId);
@@ -3503,6 +3650,7 @@ async function updateContent(force = false) {
   else if(newIndex === 6) {   // location
     if(libConfig.location.admin1 === null) {
       contentTitle.value = "";
+      showEmptyContent(requestId);
     } else {
       if(libConfig.location.name) {
         contentTitle.value = `${libConfig.location.admin1} > ${libConfig.location.name}`;
@@ -3519,6 +3667,7 @@ async function updateContent(force = false) {
       const lensModel = (libConfig.camera as any).lensModel;
       if (lensMake === null) {
         contentTitle.value = "";
+        showEmptyContent(requestId);
       } else if (lensModel) {
         contentTitle.value = `${lensMake} > ${lensModel}`;
         getFileList({ lensMake, lensModel }, requestId);
@@ -3528,6 +3677,7 @@ async function updateContent(force = false) {
       }
     } else if(libConfig.camera.make === null) {
       contentTitle.value = "";
+      showEmptyContent(requestId);
     } else {
       if(libConfig.camera.model) {
         contentTitle.value = `${libConfig.camera.make} > ${libConfig.camera.model}`;
@@ -3596,11 +3746,7 @@ function enterSimilarSearchMode(file: any) {
 
   // 4. Perform Search (reusing existing API call logic)
   const requestId = ++currentContentRequestId;
-  
-  // Reset list for loading state
-  fileList.value = [];
-  totalFileCount.value = 0;
-  totalFileSize.value = 0;
+  showLoadingContent(requestId);
   
   // Reset scroll and selection
   scrollPosition.value = 0;
@@ -3669,11 +3815,7 @@ async function enterPersonSearchMode(file: any) {
 
   // 5. Perform Search
   const requestId = ++currentContentRequestId;
-  
-  // Reset list for loading state
-  fileList.value = [];
-  totalFileCount.value = 0;
-  totalFileSize.value = 0;
+  showLoadingContent(requestId);
   
   // Reset scroll and selection
   scrollPosition.value = 0;
@@ -4698,6 +4840,7 @@ const invertSelectionInCurrentList = async () => {
 };
 
 const handleSelectMode = (value: any, options: { notify?: boolean } = {}) => {
+  if (isScanStreamingMode.value) return;
   const wasSelectMode = selectMode.value;
   selectMode.value = value;
   if(!selectMode.value) {
@@ -4794,6 +4937,7 @@ const toggleInfoPanel = () => {
 };
 
 const toggleDedupPanel = () => {
+  if (isScanStreamingMode.value) return;
   checkUnsavedChanges(() => {
     if (isDedupPanelOpen.value) {
       config.rightPanel.show = false;
@@ -5251,9 +5395,6 @@ async function openImageEditor(index: number) {
     newWindow?.show();
   });
 
-  newWindow.once('tauri://close-requested', () => {
-    newWindow?.close();
-  });
 }
 
 async function openPrintWindow(index: number) {

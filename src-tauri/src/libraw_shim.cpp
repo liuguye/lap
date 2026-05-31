@@ -43,6 +43,20 @@ struct LapLibRawMeta {
   float max_ap_max_focal;
 };
 
+struct LapLibRawDataErrorState {
+  bool occurred;
+};
+
+void lap_libraw_data_error_callback(void *callback_data, const char *file,
+                                    const long long offset) {
+  (void)file;
+  (void)offset;
+  auto *state = static_cast<LapLibRawDataErrorState *>(callback_data);
+  if (state) {
+    state->occurred = true;
+  }
+}
+
 libraw_data_t *lap_libraw_open_buffer(const unsigned char *data, size_t len,
                                       int *err) {
   libraw_data_t *raw = libraw_init(0);
@@ -213,6 +227,7 @@ int lap_libraw_extract_thumbnail(libraw_data_t *raw, int index,
 }
 
 int lap_libraw_render_preview(libraw_data_t *raw, int half_size,
+                              int strict_data_error,
                               LapLibRawImage *out) {
   if (!raw || !out) {
     return LIBRAW_UNSPECIFIED_ERROR;
@@ -224,7 +239,16 @@ int lap_libraw_render_preview(libraw_data_t *raw, int half_size,
     raw->params.half_size = 1;
   }
 
+  LapLibRawDataErrorState data_error = {false};
+  if (strict_data_error) {
+    libraw_set_dataerror_handler(raw, lap_libraw_data_error_callback,
+                                 &data_error);
+  }
+
   int ret = libraw_unpack(raw);
+  if (strict_data_error && data_error.occurred) {
+    return LIBRAW_IO_ERROR;
+  }
   if (ret != LIBRAW_SUCCESS) {
     return ret;
   }
@@ -232,12 +256,21 @@ int lap_libraw_render_preview(libraw_data_t *raw, int half_size,
   libraw_set_output_bps(raw, 8);
 
   ret = libraw_dcraw_process(raw);
+  if (strict_data_error && data_error.occurred) {
+    return LIBRAW_IO_ERROR;
+  }
   if (ret != LIBRAW_SUCCESS) {
     return ret;
   }
 
   int err = LIBRAW_SUCCESS;
   libraw_processed_image_t *image = libraw_dcraw_make_mem_image(raw, &err);
+  if (strict_data_error && data_error.occurred) {
+    if (image) {
+      libraw_dcraw_clear_mem(image);
+    }
+    return LIBRAW_IO_ERROR;
+  }
   if (!image) {
     return err != LIBRAW_SUCCESS ? err : LIBRAW_UNSPECIFIED_ERROR;
   }

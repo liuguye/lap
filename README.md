@@ -6,12 +6,11 @@
     <a href="https://github.com/julyx10/lap/releases"><img src="https://img.shields.io/github/v/release/julyx10/lap" alt="GitHub release"></a>
     <a href="https://github.com/julyx10/lap/releases"><img src="https://img.shields.io/github/downloads/julyx10/lap/total" alt="GitHub all releases"></a>
     <a href="https://github.com/julyx10/lap/stargazers"><img src="https://img.shields.io/github/stars/julyx10/lap" alt="GitHub stars"></a>
-    <a href="https://oosmetrics.com/repo/julyx10/lap"><img src="https://api.oosmetrics.com/api/v1/badge/achievement/0e5526cd-22e0-4bb1-beeb-5862be997bcd.svg" /></a>
   </p>
 </div>
 
 
-English | [简体中文](i18n/README.zh-CN.md) | [日本語](i18n/README.ja.md) | [한국어](i18n/README.ko.md) | [Deutsch](i18n/README.de.md) | [Français](i18n/README.fr.md) | [Español](i18n/README.es.md) | [Português](i18n/README.pt.md) | [Русский](i18n/README.ru.md)
+English | [Deutsch](i18n/README.de.md) | [Français](i18n/README.fr.md) | [Español](i18n/README.es.md) | [Português](i18n/README.pt.md) | [Русский](i18n/README.ru.md) | [简体中文](i18n/README.zh-CN.md) | [日本語](i18n/README.ja.md) | [한국어](i18n/README.ko.md)
 
 Lap is an open-source, local-first photo manager for browsing family albums, finding old photos quickly, and managing large personal media libraries offline.
 It is a privacy-focused alternative to cloud photo services: no forced upload, local AI search, folder-first workflow, and free to use.
@@ -33,22 +32,11 @@ brew install --cask lap
 
 Open the [latest release page](https://github.com/julyx10/lap/releases/latest), then download the file that matches your system:
 
-| Platform | Package | Status |
+| Platform | Package | Note |
 | :-- | :-- | :-- |
-| **macOS (Apple Silicon)** | `_aarch64.dmg` | Notarized by Apple |
-| **macOS (Intel)** | `_x64.dmg` | Notarized by Apple |
-| **Windows 10/11 (x64)** | `_x64_en-US.msi` | Currently unsigned (SmartScreen warning may appear) |
-| **Windows 10/11 (ARM64)** | `_arm64_en-US.msi` | Currently unsigned (SmartScreen warning may appear) |
-| **Ubuntu/Debian (amd64)** | `_amd64.deb` | For better video playback support, see the Linux note below. |
-
-### Linux Video Playback Notes
-
-On Ubuntu/Debian/Linux Mint, install these packages for better video playback support:
-
-```bash
-sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
-```
-
+| **macOS (Apple Silicon / Intel)** | `_aarch64.dmg` / `_x64.dmg` | Notarized by Apple |
+| **Windows 10/11 (x64 / ARM64)** | `_x64_en-US.msi` / `_arm64_en-US.msi` | Unsigned — if SmartScreen blocks the download, click **Keep anyway** |
+| **Linux (amd64 / arm64)** | `_amd64.deb` / `_arm64.deb` | For Debian-based distros (Ubuntu, Debian, Linux Mint, etc.) |
 ## Screenshots
 
 <p align="center">
@@ -59,7 +47,6 @@ sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
   <img src="docs/public/screenshots/lap-home-0.1.10_2.png" alt="Lap local AI photo search screenshot" width="900">
 </p>
 
-> Screenshot sample images come from [Wikimedia Commons](https://commons.wikimedia.org/).
 
 ## Press
 - **Windows Central** — [After testing LAP Photo Manager on Windows 11, I'm convinced it outperforms the built-in Photos app in all the ways that matter](https://www.windowscentral.com/microsoft/windows-11/lap-photo-manager-for-windows-11-is-it-better-than-photos-i-think-so)
@@ -80,27 +67,21 @@ sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
 - **Edit in place** with crop, rotate, flip, resize, and basic adjustments.
 - **Keep folders in sync** with filesystem-aware operations and refresh support.
 - **Use local search tools** such as text/image search, similar-image search, face clustering, and smart tags.
+- **Search in 50+ languages** with optional multilingual models, available as an additional download when needed.
 - **Open modern image formats** including WebP, HEIC/HEIF/HIF, AVIF, and JXL (JPEG XL).
 - **View RAW photos** with built-in decoding for 20+ camera RAW formats (CR2, NEF, ARW, DNG, etc.).
 - **Broad video compatibility** supporting MP4, MOV, AVI, MKV, and 20+ other formats with cross-platform optimization.
 
-## Planned Features
-
-- **Support Live Photos and Motion Photos** for mixed photo/video workflows.
-- **Expand metadata support** for EXIF, XMP, and IPTC workflows.
-
 ## Build from Source
 
 Requirements: Node.js 20+, pnpm, Rust stable.
-
-For Linux runtime video playback, see the package note in the download section above.
 
 ```bash
 # macOS system deps
 xcode-select --install
 brew install nasm pkg-config autoconf automake libtool cmake
 
-# Linux system deps (Ubuntu/Debian)
+# Linux system deps
 # sudo apt install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev \
 #   patchelf nasm clang pkg-config autoconf automake libtool cmake
 
@@ -122,6 +103,14 @@ cargo tauri dev
 | Images | JPG/JPEG, PNG, GIF, BMP, TIFF, WebP, HEIC/HEIF/HIF, AVIF, JXL |
 | RAW photos | CR2, CR3, CRW, NEF, NRW, ARW, SRF, SR2, RAF, RW2, ORF, PEF, DNG, SRW, RWL, MRW, 3FR, MOS, DCR, KDC, ERF, MEF, RAW, MDC |
 | Videos | MP4, MOV, M4V, MKV, AVI, FLV, TS/M2TS, WMV, WebM, 3GP/3G2, F4V, VOB, MPG/MPEG, ASF, DIVX and more. H.264 playback is supported on all platforms, with automatic compatibility processing when native playback is unavailable. HEVC/H.265 and VP9 are natively supported on macOS. |
+
+### Linux Video Playback Notes
+
+On Ubuntu/Debian/Linux Mint, install these packages for better video playback support:
+
+```bash
+sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
+```
 
 ## Architecture
 

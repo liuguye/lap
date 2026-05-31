@@ -2,7 +2,15 @@
 
   <div class="w-screen h-screen flex flex-col overflow-hidden bg-base-300 text-base-content/70">
     <!-- Title Bar -->
+    <TitleBar
+      v-if="showDesktopTitleBar"
+      :titlebar="`${$t('msgbox.image_editor.title')} - ${shortenFilename(fileInfo?.name || '', 32)}`"
+      :resizable="false"
+      viewName="ImageEditor"
+      class="shrink-0 z-50"
+    />
     <div
+      v-else
       class="h-10 shrink-0 flex items-center justify-between px-4 select-none"
       :class="isMac ? 'pl-20' : ''"
       data-tauri-drag-region
@@ -335,6 +343,10 @@
             ref="histogramRef"
             :source="histogramSource"
             :adjustments="histogramAdjustments"
+            :crop="histogramCrop"
+            :rotate="rotate"
+            :flip-horizontal="isFlippedX"
+            :flip-vertical="isFlippedY"
             :apply-adjustments="true"
           />
         </section>
@@ -435,7 +447,7 @@
     </div>
 
     <!-- Bottom Bar -->
-    <div v-if="fileInfo" class="h-12 shrink-0 flex items-center justify-end px-4 gap-2 border-t border-base-content/5">
+    <div v-if="fileInfo" class="h-14 shrink-0 flex items-center justify-end px-4 gap-2">
       <button
         class="px-4 py-1 rounded-box hover:bg-base-100 hover:text-base-content cursor-pointer text-sm mr-4"
         @click="clickCancel"
@@ -447,36 +459,36 @@
         </select>
       </template>
 
-      <div class="join">
-        <button
-          class="btn btn-sm btn-primary join-item"
-          :disabled="cropStatus === 1 || isProcessing"
-          @click="clickSave"
-        >{{ effectiveSaveAsNew ? $t('msgbox.image_editor.save_as_new') : $t('msgbox.image_editor.overwrite') }}</button>
-        <div class="dropdown dropdown-top dropdown-end">
+        <div class="join">
           <button
-            tabindex="0"
-            class="btn btn-sm btn-primary join-item border-l border-primary-content/20 px-1.5"
+            class="btn btn-sm btn-primary join-item px-4"
+            :disabled="cropStatus === 1 || isProcessing"
+            @click="clickSave"
+          >{{ effectiveSaveAsNew ? $t('msgbox.image_editor.save_as_new') : $t('msgbox.image_editor.overwrite') }}</button>
+          <div class="dropdown dropdown-top dropdown-end">
+            <button
+              tabindex="0"
+              class="btn btn-sm btn-primary join-item border-l border-primary-content/20 px-1.5"
             :disabled="!canOverwriteOriginal || cropStatus === 1"
-          >
-            <IconArrowDown class="w-3 h-3" />
-          </button>
-          <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box shadow-lg mb-1 p-1 text-sm w-32">
-            <li>
-              <a :class="config.imageEditor.saveAs === 0 ? 'active' : ''"
-                 @click="config.imageEditor.saveAs = 0; closeSaveDropdown()">
-                {{ $t('msgbox.image_editor.overwrite') }}
-              </a>
-            </li>
-            <li>
-              <a :class="config.imageEditor.saveAs === 1 ? 'active' : ''"
-                 @click="config.imageEditor.saveAs = 1; closeSaveDropdown()">
-                {{ $t('msgbox.image_editor.save_as_new') }}
-              </a>
-            </li>
-          </ul>
+            >
+              <IconArrowDown class="w-3 h-3" />
+            </button>
+            <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box shadow-lg mb-1 p-1 text-sm w-32">
+              <li>
+                <a :class="config.imageEditor.saveAs === 0 ? 'active' : ''"
+                   @click="config.imageEditor.saveAs = 0; closeSaveDropdown()">
+                  {{ $t('msgbox.image_editor.overwrite') }}
+                </a>
+              </li>
+              <li>
+                <a :class="config.imageEditor.saveAs === 1 ? 'active' : ''"
+                   @click="config.imageEditor.saveAs = 1; closeSaveDropdown()">
+                  {{ $t('msgbox.image_editor.save_as_new') }}
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
     </div>
   </div>
 
@@ -498,11 +510,12 @@ import { useRouter } from 'vue-router';
 import { useUIStore } from '@/stores/uiStore';
 import { useI18n } from 'vue-i18n';
 import { config } from '@/common/config';
-import { isMac, setTheme, SCALE_VALUES, getFolderPath, getFileExtension, shortenFilename, getFullPath, combineFileName, getSelectOptions, getAssetSrc, getPreviewUrl, getThumbUrl, shouldUseBackendPreview } from '@/common/utils';
+import { isWin, isMac, isLinux, setTheme, SCALE_VALUES, getFolderPath, getFileExtension, shortenFilename, getFullPath, combineFileName, getSelectOptions, getAssetSrc, getPreviewUrl, getThumbUrl, shouldUseBackendPreview } from '@/common/utils';
 import { editImage, checkFileExists, getFileInfo } from '@/common/api';
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { emit as tauriEmit, listen } from '@tauri-apps/api/event';
 
+import TitleBar from '@/components/TitleBar.vue';
 import MessageBox from '@/components/MessageBox.vue';
 import TButton from '@/components/TButton.vue';
 import SliderInput from '@/components/SliderInput.vue';
@@ -535,9 +548,35 @@ const { locale, messages } = useI18n();
 const localeMsg = computed(() => messages.value[locale.value] as any);
 
 const uiStore = useUIStore();
+const appWindow = getCurrentWebviewWindow();
+const showDesktopTitleBar = isWin || isLinux;
 
 function sendToParent(payload: Record<string, any>) {
-  tauriEmit('message-from-image-editor', payload);
+  void tauriEmit('message-from-image-editor', payload).catch((error) => {
+    console.error('Failed to notify parent from image editor:', error);
+  });
+}
+
+async function closeEditorWindow() {
+  try {
+    await appWindow.close();
+  } catch (error) {
+    try {
+      await appWindow.destroy();
+    } catch (destroyError) {
+      console.error('Failed to close image editor window:', error, destroyError);
+    }
+    return;
+  }
+
+  await new Promise(resolve => window.setTimeout(resolve, 100));
+  try {
+    if (await appWindow.isVisible()) {
+      await appWindow.destroy();
+    }
+  } catch {
+    // The window is already closed.
+  }
 }
 
 async function loadFileInfo(fileId: number) {
@@ -552,7 +591,7 @@ async function loadFileInfo(fileId: number) {
       initialImageSrc.value = typeof src === 'string' ? src : '';
     }
   } catch {
-    getCurrentWindow().close();
+    await closeEditorWindow();
   }
 }
 
@@ -622,6 +661,16 @@ type AdjustmentValues = {
 
 const histogramRef = ref<InstanceType<typeof ImageHistogram> | null>(null);
 const histogramSource = computed(() => imageSrc.value || fileInfo.value?.thumbnail || '');
+const histogramCrop = computed(() => (
+  cropApplied.value && crop.value.width > 0 && crop.value.height > 0
+    ? {
+      x: crop.value.left,
+      y: crop.value.top,
+      width: crop.value.width,
+      height: crop.value.height,
+    }
+    : null
+));
 const histogramAdjustments = computed<AdjustmentValues>(() => ({
   brightness: brightness.value,
   contrast: contrast.value,
@@ -1219,7 +1268,7 @@ onMounted(async () => {
   }
 
   if (!fileInfo.value) {
-    getCurrentWindow().close();
+    await closeEditorWindow();
     return;
   }
 
@@ -1331,8 +1380,6 @@ const initEditImage = async () => {
   isPortrait.value = isPortraitForRotation(imageWidth.value, imageHeight.value, initialDisplayRotate.value);
   if (isRawFile.value || !canOverwriteOriginal.value) {
     config.imageEditor.saveAs = 1;
-  } else if (config.imageEditor.saveAs !== 0) {
-    config.imageEditor.saveAs = 0;
   }
 
   containerRect.value = containerRef.value?.getBoundingClientRect() || null;
@@ -1866,11 +1913,11 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-const clickCancel = () => {
+const clickCancel = async () => {
   if (uiStore.activeAdjustments.filePath === fileInfo.value?.file_path) {
     uiStore.clearActiveAdjustments();
   }
-  getCurrentWindow().close();
+  await closeEditorWindow();
 };
 
 function closeSaveDropdown() {
@@ -1939,7 +1986,6 @@ const executeSave = async (overrides: { fileName?: string; destFilePath?: string
         uiStore.clearActiveAdjustments();
       }
       sendToParent({ type: 'success', saveAsNew, filePath: savedFilePath });
-      getCurrentWindow().close();
     } else {
       sendToParent({ type: 'failed' });
     }

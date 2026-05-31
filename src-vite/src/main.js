@@ -128,9 +128,6 @@ listen('settings-gridLabelPrimary-changed', (event) => {
 listen('settings-gridLabelSecondary-changed', (event) => {
   config.setGridLabelSecondary(event.payload)
 })
-listen('settings-justifyMode-changed', (event) => {
-  config.setJustifyMode(event.payload)
-})
 listen('settings-gridDateGrouping-changed', (event) => {
   config.setGridDateGrouping(event.payload)
 })
@@ -145,6 +142,9 @@ listen('settings-slideShowInterval-changed', (event) => {
 })
 listen('settings-autoPlayVideo-changed', (event) => {
   config.setAutoPlayVideo(event.payload)
+})
+listen('settings-loopVideo-changed', (event) => {
+  config.settings.loopVideo = event.payload
 })
 listen('settings-navigatorViewMode-changed', (event) => {
   config.setNavigatorViewMode(event.payload)

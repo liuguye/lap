@@ -201,7 +201,7 @@ const updateTransform = (options: boolean | { resetRotation?: boolean, recalcSca
 
   video.style.transform = `translate(-50%, -50%) rotate(${rotate.value}deg) scale(${scale.value})`;
 
-  emit('scale', { scale: scale.value, minScale: 0.1, maxScale: 10 });
+  emit('scale', { scale: scale.value, displayScale: scale.value, minScale: 0.1, maxScale: 10 });
   emit('viewport-change', { scale: scale.value, isZoomFit: isFit.value, fileType: 2 });
 };
 
@@ -236,6 +236,10 @@ const setupPlayer = (index: number) => {
 
     player.on('ended', () => {
       if (activeVideo.value === index) {
+        if (!props.isSlideShow && config.settings.loopVideo) {
+          player.play().catch(() => {});
+          return;
+        }
         isPlaying.value = false;
         isReplaying.value = true;
         if (props.isSlideShow) {

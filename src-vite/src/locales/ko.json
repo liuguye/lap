@@ -462,6 +462,8 @@
       "add": "추가",
       "placeholder": "라이브러리 이름",
       "max_limit_reached": "제한 도달",
+      "summary": "라이브러리 {count}개 · {size}",
+      "summary_loading": "라이브러리 {count}개 · 크기 계산 중...",
       "created_at_lower": "생성일",
       "calculating_stats": "라이브러리 크기 계산 중...",
       "library_file_path": "파일 경로",
@@ -605,6 +607,7 @@
       "light": "노출",
       "color": "색상",
       "compare": "원본 보기",
+      "tone": "톤",
       "shadows": "섀도우",
       "midtones": "미드톤",
       "highlights": "하이라이트",
@@ -799,7 +802,7 @@
       "pause": "일시정지",
       "zoom_in": "확대",
       "zoom_out": "축소",
-      "zoom_fit": "화면 맞춤",
+      "zoom_fit": "창 맞춤",
       "zoom_actual": "실제 크기",
       "fullscreen": "전체 화면",
       "exit_fullscreen": "전체 화면 종료",
@@ -937,7 +940,8 @@
       "style_options": [
         "카드 보기",
         "타일 보기",
-        "양쪽 맞춤 보기"
+        "양쪽 맞춤 보기",
+        "메이슨리 보기"
       ],
       "size": "크기",
       "scaling": "비율",
@@ -958,11 +962,6 @@
         "카메라",
         "렌즈",
         "설정"
-      ],
-      "justify_mode": "양쪽 맞춤 모드",
-      "justify_mode_options": [
-        "높이 균등",
-        "너비 균등 (메이슨리)"
       ],
       "date_grouping": "날짜 그룹 표시",
       "date_grouping_hint": "시간순 정렬에서만 적용됩니다",
@@ -1000,6 +999,7 @@
         "없음"
       ],
       "auto_play_video": "비디오 자동 재생",
+      "loop_video": "비디오 반복 재생",
       "show_comment": "메모 표시",
       "show_comment_hint": "뷰어에 메모 표시",
       "external_image_editor": "이미지 열기 앱",
@@ -1024,12 +1024,12 @@
     "image_search": {
       "title": "스마트 검색",
       "search_image": "이미지 검색",
-      "search_model": "검색 모델 선택",
+      "search_model": "모델 선택(재시작 후 적용)",
       "default_model_hint": "영어 이미지 검색만 지원",
       "multilingual_model_hint": "50개 이상 언어 검색 지원",
       "search_model_options": [
         "기본값(영어)",
-        "다국어(50개 이상 언어)"
+        "다국어"
       ],
       "multilingual_model_download_title": "다국어 검색 모델을 다운로드할까요?",
       "multilingual_model_download_message": "다국어 이미지 검색 모델이 설치되어 있지 않습니다. 다운로드하면 50개 이상 언어 검색을 사용할 수 있습니다.",
@@ -1046,6 +1046,55 @@
         "중간",
         "낮음"
       ]
+    },
+    "shortcuts": {
+      "title": "단축키",
+      "sections": {
+        "global": "전역",
+        "image_browsing": "이미지 탐색",
+        "viewing": "보기",
+        "file_actions": "파일 작업",
+        "metadata": "메타데이터"
+      },
+      "actions": {
+        "toggle_sidebar": "사이드바 전환",
+        "open_settings": "설정 열기",
+        "font_increase": "글꼴 크기 키우기",
+        "font_decrease": "글꼴 크기 줄이기",
+        "font_reset": "글꼴 크기 초기화",
+        "search": "검색",
+        "previous_image": "이전 이미지",
+        "next_image": "다음 이미지",
+        "first_image": "첫 번째 이미지",
+        "last_image": "마지막 이미지",
+        "quick_preview": "빠른 미리보기",
+        "close_viewer": "뷰어 닫기",
+        "search_similar": "유사 이미지 찾기",
+        "show_info": "정보 보기",
+        "zoom_in": "확대",
+        "zoom_out": "축소",
+        "zoom_fit": "실제 크기 / 창 맞춤 전환",
+        "toggle_slideshow": "슬라이드쇼 재생 / 일시정지",
+        "open_new_window": "새 창에서 보기",
+        "edit_image": "이미지 편집",
+        "copy_file": "클립보드에 복사",
+        "rename_file": "파일 이름 변경",
+        "move_to": "폴더로 이동",
+        "move_to_trash": "휴지통으로 이동",
+        "delete_permanently": "영구 삭제",
+        "refresh_file_info": "파일 정보 새로고침",
+        "print": "인쇄",
+        "toggle_favorite": "즐겨찾기 전환",
+        "clear_rating": "별점 지우기",
+        "rate_one": "별점 1개",
+        "rate_two": "별점 2개",
+        "rate_three": "별점 3개",
+        "rate_four": "별점 4개",
+        "rate_five": "별점 5개",
+        "edit_tags": "태그 편집",
+        "edit_comment": "메모 편집",
+        "rotate": "회전"
+      }
     },
     "database": {
       "title": "저장소",

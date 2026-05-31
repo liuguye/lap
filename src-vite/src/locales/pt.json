@@ -462,6 +462,8 @@
       "add": "Adicionar",
       "placeholder": "Nome da biblioteca",
       "max_limit_reached": "Limite atingido",
+      "summary": "{count} bibliotecas · {size}",
+      "summary_loading": "{count} bibliotecas · calculando tamanho...",
       "created_at_lower": "criado em",
       "calculating_stats": "Calculando o tamanho da biblioteca...",
       "library_file_path": "Caminho do arquivo",
@@ -605,6 +607,7 @@
       "light": "Luz",
       "color": "Cor",
       "compare": "Ver original",
+      "tone": "Tom",
       "shadows": "Sombras",
       "midtones": "Tons médios",
       "highlights": "Realces",
@@ -799,7 +802,7 @@
       "pause": "Pausa",
       "zoom_in": "Ampliar",
       "zoom_out": "Reduzir",
-      "zoom_fit": "Ajustar",
+      "zoom_fit": "Ajustar à janela",
       "zoom_actual": "Tamanho real",
       "fullscreen": "Tela cheia",
       "exit_fullscreen": "Sair tela cheia",
@@ -914,12 +917,12 @@
       "calendar_sort": "Calendário",
       "calendar_sort_hint": "Com base na data de captura ou na data de modificação",
       "calendar_sort_options": [
-        "Data de captura (Crescente)",
-        "Data de captura (Decrescente)",
-        "Data de criação (Crescente)",
-        "Data de criação (Decrescente)",
-        "Data de modificação (Crescente)",
-        "Data de modificação (Decrescente)"
+        "Data de captura (Cresc.)",
+        "Data de captura (Decresc.)",
+        "Data de criação (Cresc.)",
+        "Data de criação (Decresc.)",
+        "Data de modificação (Cresc.)",
+        "Data de modificação (Decresc.)"
       ],
       "category_sort": "Categorias",
       "category_sort_hint": "Tags, locais, pessoas e câmeras",
@@ -937,7 +940,8 @@
       "style_options": [
         "Visualização em cartões",
         "Visualização em mosaico",
-        "Visualização justificada"
+        "Visualização justificada",
+        "Visualização Masonry"
       ],
       "size": "Tamanho",
       "scaling": "Escala",
@@ -958,11 +962,6 @@
         "Câmera",
         "Lente",
         "Configurações"
-      ],
-      "justify_mode": "Modo justificado",
-      "justify_mode_options": [
-        "Altura igual",
-        "Largura igual (Masonry)"
       ],
       "date_grouping": "Mostrar grupos por data",
       "date_grouping_hint": "Aplica-se apenas ao ordenar por tempo",
@@ -1000,6 +999,7 @@
         "Nenhuma"
       ],
       "auto_play_video": "Auto reproduzir vídeo",
+      "loop_video": "Repetir vídeo",
       "show_comment": "Mostrar comentário",
       "show_comment_hint": "Mostrar comentários no visualizador",
       "external_image_editor": "Abrir imagem com",
@@ -1024,12 +1024,12 @@
     "image_search": {
       "title": "Pesquisa inteligente",
       "search_image": "Pesquisa de imagens",
-      "search_model": "Escolher modelo de pesquisa",
+      "search_model": "Escolher modelo (requer reinicialização)",
       "default_model_hint": "Pesquisa de imagens somente em inglês",
       "multilingual_model_hint": "Pesquisa em mais de 50 idiomas",
       "search_model_options": [
         "Padrão (inglês)",
-        "Multilíngue (50+ idiomas)"
+        "Multilíngue"
       ],
       "multilingual_model_download_title": "Baixar o modelo de pesquisa multilíngue?",
       "multilingual_model_download_message": "O modelo de pesquisa de imagens multilíngue não está instalado. Baixe-o para habilitar a pesquisa em mais de 50 idiomas.",
@@ -1046,6 +1046,55 @@
         "Média",
         "Baixa"
       ]
+    },
+    "shortcuts": {
+      "title": "Atalhos",
+      "sections": {
+        "global": "Global",
+        "image_browsing": "Navegação de imagens",
+        "viewing": "Visualização",
+        "file_actions": "Ações de arquivo",
+        "metadata": "Metadados"
+      },
+      "actions": {
+        "toggle_sidebar": "Alternar barra lateral",
+        "open_settings": "Abrir configurações",
+        "font_increase": "Aumentar tamanho da fonte",
+        "font_decrease": "Diminuir tamanho da fonte",
+        "font_reset": "Redefinir tamanho da fonte",
+        "search": "Pesquisar",
+        "previous_image": "Imagem anterior",
+        "next_image": "Próxima imagem",
+        "first_image": "Primeira imagem",
+        "last_image": "Última imagem",
+        "quick_preview": "Pré-visualização rápida",
+        "close_viewer": "Fechar visualizador",
+        "search_similar": "Encontrar imagens semelhantes",
+        "show_info": "Mostrar informações",
+        "zoom_in": "Ampliar",
+        "zoom_out": "Reduzir",
+        "zoom_fit": "Alternar tamanho real / ajustar à janela",
+        "toggle_slideshow": "Reproduzir / pausar apresentação",
+        "open_new_window": "Abrir em nova janela",
+        "edit_image": "Editar imagem",
+        "copy_file": "Copiar para a área de transferência",
+        "rename_file": "Renomear arquivo",
+        "move_to": "Mover para pasta",
+        "move_to_trash": "Mover para o lixo",
+        "delete_permanently": "Excluir permanentemente",
+        "refresh_file_info": "Atualizar informações do arquivo",
+        "print": "Imprimir",
+        "toggle_favorite": "Alternar favorito",
+        "clear_rating": "Limpar classificação",
+        "rate_one": "Avaliar 1 estrela",
+        "rate_two": "Avaliar 2 estrelas",
+        "rate_three": "Avaliar 3 estrelas",
+        "rate_four": "Avaliar 4 estrelas",
+        "rate_five": "Avaliar 5 estrelas",
+        "edit_tags": "Editar tags",
+        "edit_comment": "Editar comentário",
+        "rotate": "Girar visualização"
+      }
     },
     "database": {
       "title": "Armazenamento",

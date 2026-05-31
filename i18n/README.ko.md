@@ -1,16 +1,15 @@
 <div align="center">
-  <img src="../../docs/public/icon.png" alt="Lap Logo" width="120" style="border-radius: 20px">
+  <img src="../docs/public/icon.png" alt="Lap Logo" width="120" style="border-radius: 20px">
   <h1>Lap - 프라이빗 로컬 사진 관리자</h1>
   <h3>macOS, Windows, Linux를 위한 오픈 소스 데스크톱 사진 관리 도구.</h3>
   <p>
     <a href="https://github.com/julyx10/lap/releases"><img src="https://img.shields.io/github/v/release/julyx10/lap" alt="GitHub release"></a>
     <a href="https://github.com/julyx10/lap/releases"><img src="https://img.shields.io/github/downloads/julyx10/lap/total" alt="GitHub all releases"></a>
     <a href="https://github.com/julyx10/lap/stargazers"><img src="https://img.shields.io/github/stars/julyx10/lap" alt="GitHub stars"></a>
-    <a href="https://github.com/julyx10/lap/blob/main/LICENSE"><img src="https://img.shields.io/github/license/julyx10/lap" alt="GitHub license"></a>
   </p>
 </div>
 
-[English](../README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | 한국어 | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português](README.pt.md) | [Русский](README.ru.md)
+[English](../README.md) [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | 한국어 |
 
 Lap은 오픈 소스 기반의 '로컬 우선(local-first)' 사진 관리 도구입니다. 가족 앨범을 둘러보고, 오래된 사진을 빠르게 찾으며, 대규모 개인 미디어 라이브러리를 오프라인에서 직접 관리할 수 있도록 설계되었습니다.
 클라우드 사진 서비스의 개인정보 보호 대안으로서, 강제 업로드 없음, 로컬 AI 검색, 폴더 중심의 워크플로우를 제공하며 완전히 무료로 사용할 수 있습니다.
@@ -23,21 +22,11 @@ Lap은 오픈 소스 기반의 '로컬 우선(local-first)' 사진 관리 도구
 
 [최신 릴리스 페이지](https://github.com/julyx10/lap/releases/latest)를 열고, 시스템에 맞는 파일을 다운로드하세요.
 
-| 플랫폼 | 패키지 | 상태 |
+| 플랫폼 | 패키지 | 비고 |
 | :-- | :-- | :-- |
-| **macOS (Apple Silicon)** | `aarch64.dmg` | Apple 공증 완료 |
-| **macOS (Intel)** | `x64.dmg` | Apple 공증 완료 |
-| **Windows 10/11 (x64)** | `_x64_en-US.msi` | 현재 서명되지 않음 (SmartScreen 경고가 나타날 수 있음) |
-| **Windows 10/11 (ARM64)** | `_arm64_en-US.msi` | 현재 서명되지 않음 (SmartScreen 경고가 나타날 수 있음) |
-| **Ubuntu/Debian (amd64)** | `_amd64.deb` | 비디오 재생 지원에 대해서는 아래 Linux 참고 사항을 확인하세요. |
-
-### Linux 비디오 재생 참고 사항
-
-Ubuntu/Debian/Linux Mint 사용자는 더 원활한 비디오 재생을 위해 아래 패키지를 설치해야 합니다.
-
-```bash
-sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
-```
+| **macOS (Apple Silicon / Intel)** | `_aarch64.dmg` / `_x64.dmg` | Apple 공증 완료 |
+| **Windows 10/11 (x64 / ARM64)** | `_x64_en-US.msi` / `_arm64_en-US.msi` | 서명되지 않음 — SmartScreen이 다운로드를 차단하면 **보관**을 클릭하세요 |
+| **Linux (amd64 / arm64)** | `_amd64.deb` / `_arm64.deb` | Debian 기반 배포판용（Ubuntu, Debian, Linux Mint 등） |
 
 ## 스크린샷
 
@@ -48,8 +37,6 @@ sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
 <p align="center">
   <img src="../docs/public/screenshots/lap-home-0.1.10_2.png" alt="Lap 로컬 AI 사진 검색 스크린샷" width="900">
 </p>
-
-> 스크린샷에 사용된 샘플 이미지는 [Wikimedia Commons](https://commons.wikimedia.org/)에서 가져왔습니다.
 
 ## 왜 Lap인가요?
 
@@ -67,27 +54,21 @@ sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
 - **즉석 편집**: 자르기, 회전, 뒤집기, 크기 조절 및 기본 보정 기능을 제공합니다.
 - **폴더 동기화**: 파일 시스템 감지 기반의 동기화 및 수동 새로고침을 지원합니다.
 - **로컬 AI 검색 도구**: 텍스트/이미지 검색, 유사 이미지 검색, 얼굴 클러스터링, 스마트 태그 기능을 사용할 수 있습니다.
+- **50개 이상의 언어로 검색**: 필요할 때 추가로 다운로드할 수 있는 선택적 다국어 모델을 사용할 수 있습니다.
 - **현대적 이미지 포맷 지원**: WebP, HEIC/HEIF/HIF, AVIF 및 JXL (JPEG XL) 형식을 지원합니다.
 - **RAW 사진 보기**: 20개 이상의 카메라 제조사 RAW 포맷(CR2, NEF, ARW, DNG 등)에 대한 내장 디코딩을 지원합니다.
 - **광범위한 비디오 호환성**: MP4, MOV, AVI, MKV 및 20개 이상의 다양한 형식을 지원하며 교차 플랫폼 최적화를 제공합니다.
 
-## 향후 계획
-
-- **Live Photos 및 Motion Photos 지원**: 사진/비디오 혼합 워크플로우 지원.
-- **메타데이터 지원 확장**: EXIF, XMP, IPTC 워크플로우 강화.
-
 ## 소스에서 빌드하기
 
 요구 사양: Node.js 20+, pnpm, Rust stable.
-
-Linux 사용자는 위의 다운로드 섹션에 있는 비디오 재생 패키지 참고 사항을 확인하세요.
 
 ```bash
 # macOS 시스템 의존성
 xcode-select --install
 brew install nasm pkg-config autoconf automake libtool cmake
 
-# Linux 시스템 의존성 (Ubuntu/Debian)
+# Linux 시스템 의존성
 # sudo apt install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev \
 #   patchelf nasm clang pkg-config autoconf automake libtool cmake
 
@@ -109,6 +90,14 @@ cargo tauri dev
 | 이미지 | JPG/JPEG, PNG, GIF, BMP, TIFF, WebP, HEIC/HEIF/HIF, AVIF, JXL |
 | RAW 사진 | CR2, CR3, CRW, NEF, NRW, ARW, SRF, SR2, RAF, RW2, ORF, PEF, DNG, SRW, RWL, MRW, 3FR, MOS, DCR, KDC, ERF, MEF, RAW, MDC |
 | 비디오 | MP4, MOV, M4V, MKV, AVI, FLV, TS/M2TS, WMV, WebM, 3GP/3G2, F4V, VOB, MPG/MPEG, ASF, DIVX 등. H.264 재생은 모든 플랫폼에서 지원되며, 네이티브 재생이 불가한 경우 자동으로 호환성 처리가 진행됩니다. HEVC/H.265 및 VP9은 macOS에서 네이티브 지원됩니다. |
+
+### Linux 비디오 재생 참고 사항
+
+Linux Mint/Ubuntu/Debian 사용자는 더 원활한 비디오 재생을 위해 아래 패키지를 설치해야 합니다.
+
+```bash
+sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
+```
 
 ## 아키텍처
 

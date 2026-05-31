@@ -215,7 +215,7 @@
           :selected-item-index="fileIndex"
           :total-file-count="fileCount"
           :total-file-size="fileInfo?.size || 0"
-          :image-scale="imageScale"
+          :image-scale="imageDisplayScale"
           :show-scale="true"
           :is-embedded="true"
         />
@@ -228,7 +228,7 @@
               :selected-item-index="fileIndex"
               :total-file-count="fileCount"
               :total-file-size="fileInfo?.size || 0"
-              :image-scale="imageScale"
+              :image-scale="imageDisplayScale"
               :show-scale="true"
               :is-embedded="true"
             />
@@ -239,7 +239,7 @@
               :selected-item-index="rightFileIndex"
               :total-file-count="fileCount"
               :total-file-size="rightFileInfo?.size || 0"
-              :image-scale="rightImageScale"
+              :image-scale="rightImageDisplayScale"
               :show-scale="true"
               :is-embedded="true"
             />
@@ -339,9 +339,11 @@ const slideShowIntervalIndex = ref(Number(config.settings.slideShowInterval ?? 0
 let timer: NodeJS.Timeout | null = null;  // Timer for slide show
 
 const imageScale = ref(1);          // Image scale
+const imageDisplayScale = ref(1);   // User-facing image scale
 const imageMinScale = ref(0);       // Minimum image scale
 const imageMaxScale = ref(10);      // Maximum image scale
 const rightImageScale = ref(1);     // Right image scale
+const rightImageDisplayScale = ref(1); // User-facing right image scale
 const rightImageMinScale = ref(0);  // Right minimum scale
 const rightImageMaxScale = ref(10); // Right maximum scale
 
@@ -673,6 +675,10 @@ const viewActionOrder: ShortcutActionId[] = [
 ];
 
 function getMatchedViewAction(event: KeyboardEvent) {
+  if (isMac && event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) {
+    if (event.key === 'ArrowUp') return 'view.first';
+    if (event.key === 'ArrowDown') return 'view.last';
+  }
   return viewActionOrder.find((actionId) => matchesShortcut(actionId, event, shortcutPlatform));
 }
 
@@ -1034,12 +1040,14 @@ const closeWindow = () => {
 const clickScale = (event: any, pane: 'left' | 'right' = 'left') => {
   if (pane === 'right') {
     rightImageScale.value = event.scale;
+    rightImageDisplayScale.value = event.displayScale ?? event.scale;
     rightImageMinScale.value = event.minScale;
     rightImageMaxScale.value = event.maxScale;
     return;
   }
 
   imageScale.value = event.scale;
+  imageDisplayScale.value = event.displayScale ?? event.scale;
   imageMinScale.value = event.minScale;
   imageMaxScale.value = event.maxScale;
 };

@@ -13,10 +13,12 @@ export type ShortcutContext =
   | 'map';
 
 export type ShortcutActionId =
+  | 'app.sidebar.toggle'
   | 'app.scale.increase'
   | 'app.scale.decrease'
   | 'app.scale.reset'
   | 'app.preferences'
+  | 'app.search'
   | 'file.openNewWindow'
   | 'file.editImage'
   | 'file.print'
@@ -85,6 +87,13 @@ export const DEFAULT_PLATFORM: ShortcutPlatform =
 
 export const SHORTCUTS: readonly ShortcutDefinition[] = [
   {
+    id: 'app.sidebar.toggle',
+    contexts: ['global'],
+    defaultBindings: [
+      { code: 'KeyB', modifiers: ['cmdOrCtrl'], allowShift: true, label: { mac: '⌘B', windows: 'Ctrl+B', linux: 'Ctrl+B' } },
+    ],
+  },
+  {
     id: 'app.scale.increase',
     contexts: ['global'],
     defaultBindings: [
@@ -114,7 +123,14 @@ export const SHORTCUTS: readonly ShortcutDefinition[] = [
     id: 'app.preferences',
     contexts: ['global'],
     defaultBindings: [
-      { key: ',', modifiers: ['cmdOrCtrl'], label: { mac: '⌘,', windows: 'Ctrl+,', linux: 'Ctrl+,' } },
+      { code: 'Comma', modifiers: ['cmdOrCtrl'], label: { mac: '⌘,', windows: 'Ctrl+,', linux: 'Ctrl+,' } },
+    ],
+  },
+  {
+    id: 'app.search',
+    contexts: ['global'],
+    defaultBindings: [
+      { key: '/', modifiers: ['cmdOrCtrl'], label: { mac: '⌘/', windows: 'Ctrl+/', linux: 'Ctrl+/' } },
     ],
   },
   {
@@ -261,12 +277,18 @@ export const SHORTCUTS: readonly ShortcutDefinition[] = [
   {
     id: 'view.first',
     contexts: ['content', 'image-viewer'],
-    defaultBindings: [{ key: 'Home', label: 'Home' }],
+    defaultBindings: [
+      { key: 'ArrowUp', modifiers: ['meta'], platforms: ['mac'], label: { mac: '⌘↑' } },
+      { key: 'Home', platforms: ['windows', 'linux'], label: { windows: 'Home', linux: 'Home' } },
+    ],
   },
   {
     id: 'view.last',
     contexts: ['content', 'image-viewer'],
-    defaultBindings: [{ key: 'End', label: 'End' }],
+    defaultBindings: [
+      { key: 'ArrowDown', modifiers: ['meta'], platforms: ['mac'], label: { mac: '⌘↓' } },
+      { key: 'End', platforms: ['windows', 'linux'], label: { windows: 'End', linux: 'End' } },
+    ],
   },
   {
     id: 'view.zoomIn',

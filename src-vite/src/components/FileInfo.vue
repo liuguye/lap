@@ -9,13 +9,6 @@
       </div>
       <div class="mt-2 flex items-center gap-1">
         <TButton
-          :icon="IconRefresh"
-          :tooltip="$t('menu.file.refresh_file_info')"
-          :buttonSize="'small'"
-          :disabled="!fileInfo"
-          @click.stop="emit('refreshFileInfo')"
-        />
-        <TButton
           :icon="IconClose"
           :tooltip="$t('msgbox.close')"
           :buttonSize="'small'"
@@ -28,7 +21,7 @@
     <div v-if="fileInfo" class="mb-2 px-2 flex-1 overflow-y-auto overflow-x-hidden flex flex-col">
 
       <!-- Preview Section -->
-      <div class="group/thumbnail border-t border-base-content/10 px-1 py-3 space-y-3">
+      <div class="group/thumbnail border-t border-base-content/5 px-1 py-3 space-y-3">
         <div
           class="flex items-center gap-2 cursor-pointer text-base-content/70 hover:text-base-content transition-all duration-200 ease-in-out"
           @click.stop="togglePreview"
@@ -153,7 +146,7 @@
       </div>
 
       <!-- File Info Section -->
-      <div class="border-t border-base-content/10 px-1 py-4 space-y-3">
+      <div class="border-t border-base-content/5 px-1 py-4 space-y-3">
 
         <div class="flex items-center gap-2 cursor-pointer text-base-content/70 hover:text-base-content transition-all duration-200 ease-in-out" 
           @click.stop="toggleBasicInfo"
@@ -243,7 +236,7 @@
 
             <!-- Dimension -->
             <div class="flex items-center text-[10px] uppercase tracking-widest font-bold text-base-content/25 h-6">{{ $t('file_info.dimension') }}</div>
-            <div class="flex items-center text-xs font-semibold text-base-content/65">{{ formatDimensionText(fileInfo?.width, fileInfo?.height) }}</div>
+            <div class="flex items-center text-xs font-semibold text-base-content/65">{{ formatDimensionText(fileInfo?.width, fileInfo?.height, true) }}</div>
 
             <!-- Duration -->
             <template v-if="fileInfo?.file_type === 2">
@@ -347,7 +340,7 @@
       </div>
 
       <!-- Metadata Section -->
-      <div class="border-t border-base-content/10 px-1 py-4 space-y-3">
+      <div class="border-t border-base-content/5 px-1 py-4 space-y-3">
 
         <div class="flex items-center gap-2 cursor-pointer text-base-content/70 hover:text-base-content" @click.stop="toggleMetadata">
           <IconCameraAperture class="w-4 h-4 " /> 
@@ -406,7 +399,7 @@
 
       <!-- Map View -->
       <div v-if="fileInfo?.gps_latitude && fileInfo?.gps_longitude" 
-        class="border-t border-base-content/10 px-1 py-4 space-y-3 flex flex-col transition-[flex-grow]" 
+        class="border-t border-base-content/5 px-1 py-4 space-y-3 flex flex-col transition-[flex-grow]" 
         :class="{ 'flex-1 min-h-[300px] shrink-0': showMapPanel }">
         <div class="flex items-center gap-2 cursor-pointer text-base-content/70 hover:text-base-content shrink-0" @click.stop="toggleMapPanel">
           <IconLocation class="w-4 h-4 " /> 
@@ -478,7 +471,6 @@ import {
   IconFile, IconFolderSearch, IconHeart, IconHeartFilled, IconStar, IconStarFilled, IconEdit,
   IconFolderExpanded,
   IconPhoto,
-  IconRefresh,
   IconRotate,
   IconVideo,
   IconVideoPlay,
@@ -510,7 +502,6 @@ const emit = defineEmits([
   'quickEditTag',
   'quickEditComment',
   'navigateFolder',
-  'refreshFileInfo',
 ]);
 
 const toast = useToast();

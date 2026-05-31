@@ -462,6 +462,8 @@
       "add": "Ajouter",
       "placeholder": "Nom bibliothèque",
       "max_limit_reached": "Limite atteinte",
+      "summary": "{count} bibliothèques · {size}",
+      "summary_loading": "{count} bibliothèques · calcul de la taille...",
       "created_at_lower": "créé le",
       "calculating_stats": "Calcul de la taille de la bibliothèque...",
       "library_file_path": "Chemin fichier",
@@ -605,6 +607,7 @@
       "light": "Lumière",
       "color": "Couleur",
       "compare": "Voir l'original",
+      "tone": "Ton",
       "shadows": "Ombres",
       "midtones": "Tons moyens",
       "highlights": "Hautes lumières",
@@ -799,7 +802,7 @@
       "pause": "Pause",
       "zoom_in": "Zoom av.",
       "zoom_out": "Zoom arr.",
-      "zoom_fit": "Ajuster",
+      "zoom_fit": "Ajuster à la fenêtre",
       "zoom_actual": "Taille réelle",
       "fullscreen": "Plein écran",
       "exit_fullscreen": "Quitter plein écran",
@@ -914,12 +917,12 @@
       "calendar_sort": "Calendrier",
       "calendar_sort_hint": "Basé sur la date de prise ou la date de modification",
       "calendar_sort_options": [
-        "Date de prise (Croissant)",
-        "Date de prise (Décroissant)",
-        "Date de création (Croissant)",
-        "Date de création (Décroissant)",
-        "Date de modification (Croissant)",
-        "Date de modification (Décroissant)"
+        "Date de prise (Crois.)",
+        "Date de prise (Décrois.)",
+        "Date de création (Crois.)",
+        "Date de création (Décrois.)",
+        "Date de modification (Crois.)",
+        "Date de modification (Décrois.)"
       ],
       "category_sort": "Catégories",
       "category_sort_hint": "Tags, lieux, personnes et appareils photo",
@@ -937,7 +940,8 @@
       "style_options": [
         "Vue carte",
         "Vue mosaïque",
-        "Vue justifiée"
+        "Vue justifiée",
+        "Vue Masonry"
       ],
       "size": "Taille",
       "scaling": "Mise à l'échelle",
@@ -958,11 +962,6 @@
         "Appareil",
         "Objectif",
         "Paramètres"
-      ],
-      "justify_mode": "Mode justifié",
-      "justify_mode_options": [
-        "Hauteur égale",
-        "Largeur égale (Masonry)"
       ],
       "date_grouping": "Afficher les groupes par date",
       "date_grouping_hint": "S'applique uniquement au tri par date",
@@ -1000,6 +999,7 @@
         "Aucune"
       ],
       "auto_play_video": "Lecture auto vidéo",
+      "loop_video": "Vidéo en boucle",
       "show_comment": "Afficher commentaire",
       "show_comment_hint": "Afficher les commentaires dans le visualiseur",
       "external_image_editor": "Ouvrir l'image avec",
@@ -1024,12 +1024,12 @@
     "image_search": {
       "title": "Recherche intelligente",
       "search_image": "Recherche d'images",
-      "search_model": "Choisir le modèle de recherche",
+      "search_model": "Choisir le modèle (redémarrage requis)",
       "default_model_hint": "Recherche d'images en anglais uniquement",
       "multilingual_model_hint": "Recherche dans plus de 50 langues",
       "search_model_options": [
         "Par défaut (anglais)",
-        "Multilingue (50+ langues)"
+        "Multilingue"
       ],
       "multilingual_model_download_title": "Télécharger le modèle de recherche multilingue ?",
       "multilingual_model_download_message": "Le modèle de recherche d'images multilingue n'est pas installé. Téléchargez-le pour activer la recherche dans plus de 50 langues.",
@@ -1046,6 +1046,55 @@
         "Moyenne",
         "Faible"
       ]
+    },
+    "shortcuts": {
+      "title": "Raccourcis",
+      "sections": {
+        "global": "Global",
+        "image_browsing": "Navigation dans les images",
+        "viewing": "Affichage",
+        "file_actions": "Actions sur les fichiers",
+        "metadata": "Métadonnées"
+      },
+      "actions": {
+        "toggle_sidebar": "Afficher/masquer la barre latérale",
+        "open_settings": "Ouvrir les paramètres",
+        "font_increase": "Augmenter la taille de la police",
+        "font_decrease": "Diminuer la taille de la police",
+        "font_reset": "Réinitialiser la taille de la police",
+        "search": "Rechercher",
+        "previous_image": "Image précédente",
+        "next_image": "Image suivante",
+        "first_image": "Première image",
+        "last_image": "Dernière image",
+        "quick_preview": "Aperçu rapide",
+        "close_viewer": "Fermer la visionneuse",
+        "search_similar": "Rechercher des images similaires",
+        "show_info": "Afficher les informations",
+        "zoom_in": "Zoom avant",
+        "zoom_out": "Zoom arrière",
+        "zoom_fit": "Taille réelle / Ajuster à la fenêtre",
+        "toggle_slideshow": "Lire / Mettre en pause le diaporama",
+        "open_new_window": "Détacher la fenêtre",
+        "edit_image": "Modifier l'image",
+        "copy_file": "Copier dans le presse-papier",
+        "rename_file": "Renommer le fichier",
+        "move_to": "Déplacer vers le dossier",
+        "move_to_trash": "Déplacer vers la corbeille",
+        "delete_permanently": "Supprimer définitivement",
+        "refresh_file_info": "Actualiser les informations du fichier",
+        "print": "Imprimer",
+        "toggle_favorite": "Basculer le favori",
+        "clear_rating": "Effacer la note",
+        "rate_one": "Noter 1 étoile",
+        "rate_two": "Noter 2 étoiles",
+        "rate_three": "Noter 3 étoiles",
+        "rate_four": "Noter 4 étoiles",
+        "rate_five": "Noter 5 étoiles",
+        "edit_tags": "Modifier les étiquettes",
+        "edit_comment": "Modifier le commentaire",
+        "rotate": "Pivoter la vue"
+      }
     },
     "database": {
       "title": "Stockage",

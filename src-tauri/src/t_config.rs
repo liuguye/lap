@@ -738,7 +738,12 @@ pub fn get_library_state(id: &str) -> Result<LibraryState, String> {
 /// Get current library state
 pub fn get_current_library_state() -> Result<LibraryState, String> {
     let config = load_app_config()?;
-    get_library_state(&config.current_library_id)
+    config
+        .libraries
+        .iter()
+        .find(|lib| lib.id == config.current_library_id)
+        .map(|lib| lib.state.clone())
+        .ok_or_else(|| "Library not found".to_string())
 }
 
 /// Hide/Show a library

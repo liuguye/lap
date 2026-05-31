@@ -1,16 +1,15 @@
 <div align="center">
-  <img src="../../docs/public/icon.png" alt="Lap Logo" width="120" style="border-radius: 20px">
+  <img src="../docs/public/icon.png" alt="Lap Logo" width="120" style="border-radius: 20px">
   <h1>Lap – Privater lokaler Fotomanager</h1>
   <h3>Open-Source-Desktop-Fotomanager für macOS, Windows und Linux.</h3>
   <p>
     <a href="https://github.com/julyx10/lap/releases"><img src="https://img.shields.io/github/v/release/julyx10/lap" alt="GitHub release"></a>
     <a href="https://github.com/julyx10/lap/releases"><img src="https://img.shields.io/github/downloads/julyx10/lap/total" alt="GitHub all releases"></a>
     <a href="https://github.com/julyx10/lap/stargazers"><img src="https://img.shields.io/github/stars/julyx10/lap" alt="GitHub stars"></a>
-    <a href="https://github.com/julyx10/lap/blob/main/LICENSE"><img src="https://img.shields.io/github/license/julyx10/lap" alt="GitHub license"></a>
   </p>
 </div>
 
-[English](../README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | Deutsch | [Français](README.fr.md) | [Español](README.es.md) | [Português](README.pt.md) | [Русский](README.ru.md)
+[English](../README.md) | Deutsch | [Français](README.fr.md) | [Español](README.es.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md) 
 
 Lap ist ein quelloffener, lokal orientierter Fotomanager zum Durchsuchen von Familienalben, zum schnellen Finden alter Fotos und zum Offline-Verwalten großer persönlichen Medienbibliotheken.
 Es ist eine datenschutzorientierte Alternative zu Cloud-Fotodiensten: kein erzwungener Upload, lokale KI-Suche, ordnerbasierter Workflow und kostenlos nutzbar.
@@ -23,21 +22,11 @@ Es ist eine datenschutzorientierte Alternative zu Cloud-Fotodiensten: kein erzwu
 
 Öffnen Sie die Seite der [neuesten Veröffentlichungen](https://github.com/julyx10/lap/releases/latest) und laden Sie die Datei herunter, die Ihrem System entspricht:
 
-| Plattform | Paket | Status |
+| Plattform | Paket | Hinweis |
 | :-- | :-- | :-- |
-| **macOS (Apple Silicon)** | `aarch64.dmg` | Von Apple notarisiert |
-| **macOS (Intel)** | `x64.dmg` | Von Apple notarisiert |
-| **Windows 10/11 (x64)** | `_x64_en-US.msi` | Derzeit nicht signiert (SmartScreen-Warnung kann erscheinen) |
-| **Windows 10/11 (ARM64)** | `_arm64_en-US.msi` | Derzeit nicht signiert (SmartScreen-Warnung kann erscheinen) |
-| **Ubuntu/Debian (amd64)** | `_amd64.deb` | Für bessere Video-Unterstützung siehe die Linux-Hinweise unten. |
-
-### Linux Video-Wiedergabe Hinweise
-
-Installieren Sie unter Ubuntu/Debian/Linux Mint diese Pakete für eine bessere Unterstützung der Videowiedergabe:
-
-```bash
-sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
-```
+| **macOS (Apple Silicon / Intel)** | `_aarch64.dmg` / `_x64.dmg` | Von Apple notarisiert |
+| **Windows 10/11 (x64 / ARM64)** | `_x64_en-US.msi` / `_arm64_en-US.msi` | Nicht signiert — falls SmartScreen den Download blockiert, klicken Sie auf **Trotzdem behalten** |
+| **Linux (amd64 / arm64)** | `_amd64.deb` / `_arm64.deb` | Für Debian-basierte Distributionen (Ubuntu, Debian, Linux Mint, etc.) |
 
 ## Screenshots
 
@@ -48,8 +37,6 @@ sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
 <p align="center">
   <img src="../docs/public/screenshots/lap-home-0.1.10_2.png" alt="Lap lokale KI-Fotosuche Screenshot" width="900">
 </p>
-
-> Die Beispielbilder in den Screenshots stammen von [Wikimedia Commons](https://commons.wikimedia.org/).
 
 ## Warum Lap
 
@@ -67,27 +54,21 @@ sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
 - **Direkt bearbeiten** mit Zuschneiden, Drehen, Spiegeln, Skalieren und grundlegenden Anpassungen.
 - **Ordner synchron halten** mit dateisystembasierten Operationen und Aktualisierungsunterstützung.
 - **Lokale KI-Werkzeuge nutzen** wie Text-/Bildsuche, Suche nach ähnlichen Bildern, Gesichts-Clustering und intelligente Schlagworte.
+- **In über 50 Sprachen suchen** mit optionalen mehrsprachigen Modellen, die bei Bedarf als zusätzlicher Download verfügbar sind.
 - **Moderne Bildformate öffnen** einschließlich WebP, HEIC/HEIF/HIF, AVIF and JXL (JPEG XL).
 - **RAW-Fotos anzeigen** mit integrierter Dekodierung für über 20 Kamera-RAW-Formate (CR2, NEF, ARW, DNG usw.).
 - **Breite Videokompatibilität**: Unterstützung für MP4, MOV, AVI, MKV und über 20 weitere Formate mit plattformübergreifender Optimierung.
 
-## Geplante Funktionen
-
-- **Unterstützung für Live Photos und Motion Photos** für gemischte Foto-/Video-Workflows.
-- **Erweiterte Metadaten-Unterstützung** für EXIF-, XMP- und IPTC-Workflows.
-
 ## Aus dem Quellcode erstellen
 
 Anforderungen: Node.js 20+, pnpm, Rust stabil.
-
-Für die Videowiedergabe unter Linux siehe die Pakethinweise im Abschnitt Downloads oben.
 
 ```bash
 # macOS System-Abhängigkeiten
 xcode-select --install
 brew install nasm pkg-config autoconf automake libtool cmake
 
-# Linux System-Abhängigkeiten (Ubuntu/Debian)
+# Linux System-Abhängigkeiten
 # sudo apt install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev \
 #   patchelf nasm clang pkg-config autoconf automake libtool cmake
 
@@ -109,6 +90,14 @@ cargo tauri dev
 | Bilder | JPG/JPEG, PNG, GIF, BMP, TIFF, WebP, HEIC/HEIF/HIF, AVIF, JXL |
 | RAW-Fotos | CR2, CR3, CRW, NEF, NRW, ARW, SRF, SR2, RAF, RW2, ORF, PEF, DNG, SRW, RWL, MRW, 3FR, MOS, DCR, KDC, ERF, MEF, RAW, MDC |
 | Videos | MP4, MOV, M4V, MKV, AVI, FLV, TS/M2TS, WMV, WebM, 3GP/3G2, F4V, VOB, MPG/MPEG, ASF, DIVX und weitere. Die H.264-Wiedergabe wird auf allen Plattformen unterstützt, mit automatischer Kompatibilitätsverarbeitung, wenn die native Wiedergabe nicht verfügbar ist. HEVC/H.265 und VP9 werden nativ auf macOS unterstützt. |
+
+### Linux Video-Wiedergabe Hinweise
+
+Installieren Sie unter Linux Mint/Ubuntu/Debian diese Pakete für eine bessere Unterstützung der Videowiedergabe:
+
+```bash
+sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
+```
 
 ## Architektur
 

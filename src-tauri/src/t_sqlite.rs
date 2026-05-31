@@ -1037,6 +1037,10 @@ impl AFile {
                 (None, None, None, None)
             };
 
+        // RAW dimensions are already orientation-adjusted in `get_raw_dimensions`.
+        let should_swap_dimensions_for_orientation =
+            file_type != 3 && !t_image::is_heic_path(file_path);
+
         let file = Self {
             id: None,
             folder_id,
@@ -1054,10 +1058,22 @@ impl AFile {
 
             taken_date,
             width: e_orientation
-                .map(|orientation| if orientation > 4 { height } else { width })
+                .map(|orientation| {
+                    if should_swap_dimensions_for_orientation && orientation > 4 {
+                        height
+                    } else {
+                        width
+                    }
+                })
                 .or(Some(width)),
             height: e_orientation
-                .map(|orientation| if orientation > 4 { width } else { height })
+                .map(|orientation| {
+                    if should_swap_dimensions_for_orientation && orientation > 4 {
+                        width
+                    } else {
+                        height
+                    }
+                })
                 .or(Some(height)),
             duration: Some(duration as i64),
 
@@ -3185,7 +3201,7 @@ impl AThumb {
             }
 
             let hydrated = Self::ensure_cached(thumbnail, file_path, thumbnail_size, orientation)?;
-            if hydrated.thumb_data.is_some() || hydrated.thumb_key.is_some() {
+            if hydrated.thumb_data.is_some() {
                 return Ok(Some(hydrated));
             }
 
@@ -3225,7 +3241,7 @@ impl AThumb {
         }
 
         let hydrated = Self::ensure_cached(thumbnail, file_path, thumbnail_size, orientation)?;
-        if hydrated.thumb_data.is_some() || hydrated.thumb_key.is_some() {
+        if hydrated.thumb_data.is_some() {
             return Ok(Some(hydrated));
         }
 
