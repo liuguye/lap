@@ -167,7 +167,7 @@ async fn main() {
 
             Ok(())
         })
-        .on_window_event(|window, event| {
+        .on_window_event(move |window, event| {
             if window.label() != "main" {
                 return;
             }
