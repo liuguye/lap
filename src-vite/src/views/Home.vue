@@ -30,17 +30,20 @@
         @focus="uiStore.setActivePane('left-sidebar')"
       >
           <div
-            class="absolute inset-y-0 left-0 bg-base-200 rounded-box"
+            class="absolute inset-y-0 left-0 bg-base-200 rounded-box pointer-events-none"
             :class="isDraggingSplitter ? '' : 'transition-[width] duration-200 ease-in-out'"
             :style="{ width: leftPanelVisualExpanded ? leftPanelWidth : '4rem' }"
           ></div>
 
-          <!-- side bar -->
-          <div 
-            class="fixed top-14 min-w-16 bottom-10 z-10 flex flex-col items-center space-y-1" 
-            data-tauri-drag-region
+          <!-- side bar: one scrollable list (incl. Settings); no-drag so parent drag-region cannot swallow clicks on div[role=button] -->
+          <div
+            class="fixed top-14 left-0 w-16 bottom-10 z-20 flex flex-col items-center space-y-1 overflow-y-auto overflow-x-hidden no-scrollbar [-webkit-app-region:no-drag] [app-region:no-drag]"
           >
-            <div v-for="item in visibleButtons" :key="item.index">
+            <div
+              v-for="item in visibleButtons"
+              :key="item.index"
+              class="shrink-0 [-webkit-app-region:no-drag] [app-region:no-drag]"
+            >
               <TButton
                 :buttonSize="'large'"
                 :icon="item.icon"
@@ -53,18 +56,17 @@
               />
             </div>
 
-            <div class="flex-1"></div>
-
-            <TButton 
-              class="mt-auto"
-              :class="showDebugBadge ? 'text-warning': ''"
-              :buttonSize="'large'" 
-              :icon="IconSettings" 
-              text=""
-              :tooltip="$t('sidebar.settings')"
-              tooltipPlacement="right"
-              @click="clickSettings"
-            />
+            <div class="shrink-0 [-webkit-app-region:no-drag] [app-region:no-drag]">
+              <TButton
+                :class="showDebugBadge ? 'text-warning': ''"
+                :buttonSize="'large'"
+                :icon="IconSettings"
+                text=""
+                :tooltip="$t('sidebar.settings')"
+                tooltipPlacement="right"
+                @click="clickSettings"
+              />
+            </div>
           </div>
 
           <!-- library title -->
